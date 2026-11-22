@@ -1,43 +1,44 @@
-# Installation guide
+# Guía de instalación
 
-Ecuador Indicators ships as an unsigned desktop application for Windows, macOS
-and Linux. The installers are built on native GitHub Actions runners, installed
-on a clean runner and smoke-tested with `ecuador-indicators --self-check` before
-the release is published. This page explains how to install each build and how
-to verify that the file you downloaded is the one the project published.
+Ecuador Indicators se distribuye como una aplicación de escritorio sin firma para
+Windows, macOS y Linux. Los instaladores se construyen en runners nativos de GitHub
+Actions, se instalan en un runner limpio y se prueban con
+`ecuador-indicators --self-check` antes de publicar la release. Esta página explica
+cómo instalar cada build y cómo verificar que el archivo descargado es el que publicó
+el proyecto.
 
-- [Download](#download)
-- [Verify the download](#verify-the-download)
+- [Descarga](#descarga)
+- [Verificar la descarga](#verificar-la-descarga)
 - [Windows](#windows)
 - [macOS](#macos)
 - [Linux](#linux)
-- [What the application writes](#what-the-application-writes)
-- [Uninstall](#uninstall)
-- [Privacy and limitations](#privacy-and-limitations)
+- [Qué escribe la aplicación](#qué-escribe-la-aplicación)
+- [Desinstalar](#desinstalar)
+- [Privacidad y limitaciones](#privacidad-y-limitaciones)
 
-## Download
+## Descarga
 
-Open the [latest release](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/releases/latest)
-and pick the file that matches your operating system. Asset names follow
-`ecuador-indicators_<version>_<platform>_<arch>.<ext>`.
+Abre la [última release](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/releases/latest)
+y elige el archivo que corresponda a tu sistema operativo. Los nombres de los assets
+siguen el patrón `ecuador-indicators_<version>_<platform>_<arch>.<ext>`.
 
-| Operating system | Architecture | Recommended file | Alternative |
+| Sistema operativo | Arquitectura | Archivo recomendado | Alternativa |
 |---|---|---|---|
 | Windows 10/11 | x64 | `ecuador-indicators_0.1.0_windows_x64.exe` (NSIS) | `ecuador-indicators_0.1.0_windows_x64.msi` |
-| macOS 11 or newer | Apple Silicon (arm64) | `ecuador-indicators_0.1.0_macos_arm64.dmg` | — |
-| macOS 11 or newer | Intel (x64) | `ecuador-indicators_0.1.0_macos_x64.dmg` | — |
+| macOS 11 o posterior | Apple Silicon (arm64) | `ecuador-indicators_0.1.0_macos_arm64.dmg` | — |
+| macOS 11 o posterior | Intel (x64) | `ecuador-indicators_0.1.0_macos_x64.dmg` | — |
 | Linux | x64 | `ecuador-indicators_0.1.0_linux_x64.deb` (Debian/Ubuntu) | `ecuador-indicators_0.1.0_linux_x64.rpm`, `ecuador-indicators_0.1.0_linux_x64.AppImage` |
 
-Every release also publishes `SHA256SUMS.txt`. The build is not code-signed
-and not notarized; the operating system will warn you. The warnings are
-expected and are explained per platform below.
+Cada release también publica `SHA256SUMS.txt`. El build no está firmado con código ni
+notarizado; el sistema operativo mostrará una advertencia. Esas advertencias son
+esperadas y se explican por plataforma más abajo.
 
-## Verify the download
+## Verificar la descarga
 
-Verify the checksum before running an installer. Download `SHA256SUMS.txt`
-from the same release next to the installer.
+Verifica el checksum antes de ejecutar un instalador. Descarga `SHA256SUMS.txt` desde la
+misma release, junto al instalador.
 
-Linux and macOS:
+Linux y macOS:
 
 ```bash
 sha256sum -c SHA256SUMS.txt          # Linux
@@ -51,73 +52,73 @@ Get-FileHash .\ecuador-indicators_0.1.0_windows_x64.exe -Algorithm SHA256
 # Compare the printed hash with the line for that file in SHA256SUMS.txt
 ```
 
-GitHub also records build provenance for every asset. With the GitHub CLI
-installed and authenticated:
+GitHub también registra la procedencia del build de cada asset. Con la GitHub CLI
+instalada y autenticada:
 
 ```bash
 gh attestation verify ecuador-indicators_0.1.0_linux_x64.deb \
   --repo Eduardo12Pacheco/indicadores-ecuador-escritorio
 ```
 
-The same command works for the `.exe`, `.msi` and `.dmg` files. A successful
-verification proves the file was produced by this repository's release
-workflow; it does not replace the checksum, and it does not make an unsigned
-build trusted by the operating system.
+El mismo comando funciona para los archivos `.exe`, `.msi` y `.dmg`. Una verificación
+exitosa demuestra que el archivo fue producido por el workflow de release de este
+repositorio; no reemplaza el checksum y no hace que el sistema operativo confíe en un
+build sin firma.
 
 ## Windows
 
-### NSIS installer (recommended)
+### Instalador NSIS (recomendado)
 
-1. Run `ecuador-indicators_0.1.0_windows_x64.exe`.
-2. Windows SmartScreen shows "Windows protected your PC". Choose **More info**
-   and then **Run anyway**.
-3. The NSIS package installs per user by default, so it does not need
-   administrator rights. It creates Start Menu and desktop shortcuts and an
-   uninstaller in Windows Settings → Apps.
+1. Ejecuta `ecuador-indicators_0.1.0_windows_x64.exe`.
+2. Windows SmartScreen muestra "Windows protegió su PC". Elige **Más información** y
+   luego **Ejecutar de todas formas**.
+3. El paquete NSIS se instala por usuario de forma predeterminada, así que no necesita
+   derechos de administrador. Crea accesos directos en el menú Inicio y en el escritorio,
+   además de un desinstalador en Configuración de Windows → Aplicaciones.
 
-Windows 11 **Smart App Control** may block the unsigned executable outright,
-with no per-app override. Smart App Control can only be turned off globally in
-Windows Security → App & browser control → Smart App Control. Only do that if
-you understand the trade-off; otherwise use a machine where Smart App Control
-is already off.
+Windows 11 **Smart App Control** puede bloquear por completo el ejecutable sin firma, sin
+excepción por aplicación. Smart App Control solo puede desactivarse de forma global en
+Seguridad de Windows → Control de aplicaciones y del navegador → Smart App Control.
+Hazlo solo si entiendes la compensación; de lo contrario, usa un equipo donde Smart App
+Control ya esté desactivado.
 
-### MSI installer
+### Instalador MSI
 
-The MSI is provided for managed environments. Run it from the release folder;
-administrators can deploy it with the usual `msiexec /i` options. The MSI does
-not include a download of WebView2 beyond the configured bootstrapper, so an
-offline machine must already have the WebView2 Runtime installed.
+El MSI está pensado para entornos administrados. Ejecútalo desde la carpeta de la release;
+las personas administradoras pueden desplegarlo con las opciones habituales de
+`msiexec /i`. El MSI no incluye una descarga de WebView2 más allá del bootstrapper
+configurado, así que un equipo sin conexión debe tener ya instalado el WebView2 Runtime.
 
 ### WebView2
 
-Ecuador Indicators uses the Microsoft Edge WebView2 Runtime that ships with
-current Windows 10 and Windows 11 installations. If it is missing, the
-bundled bootstrapper downloads it during installation, which needs a network
-connection once. After installation the application itself is fully offline.
+Ecuador Indicators usa Microsoft Edge WebView2 Runtime, que incluyen las instalaciones
+actuales de Windows 10 y Windows 11. Si falta, el bootstrapper incluido lo descarga durante
+la instalación, lo que requiere una conexión de red una sola vez. Después de la instalación,
+la aplicación funciona completamente sin conexión.
 
 ## macOS
 
-1. Open `ecuador-indicators_0.1.0_macos_arm64.dmg` (Apple Silicon) or
+1. Abre `ecuador-indicators_0.1.0_macos_arm64.dmg` (Apple Silicon) o
    `ecuador-indicators_0.1.0_macos_x64.dmg` (Intel).
-2. Drag **Ecuador Indicators** to `/Applications`.
-3. The build is ad-hoc signed, not notarized. Gatekeeper therefore warns that
-   the developer cannot be verified. Open **System Settings → Privacy &
-   Security**, scroll to the security section and choose **Open Anyway** for
-   Ecuador Indicators. Apple documents this path in
-   [Open a Mac app from an unidentified developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac).
-4. Launch the app again. Apple Silicon macOS requires at least an ad-hoc
-   signature; this build provides one, but the approval step is still needed
-   because the app is not notarized.
+2. Arrastra **Ecuador Indicators** a `/Applications`.
+3. El build tiene firma ad-hoc, no está notarizado. Por eso Gatekeeper advierte que no se
+   puede verificar al desarrollador. Abre **Ajustes del Sistema → Privacidad y seguridad**,
+   desplázate a la sección de seguridad y elige **Open Anyway** para Ecuador Indicators.
+   Apple documenta esta ruta en
+   [Abrir una app de Mac de un desarrollador no identificado](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac).
+4. Vuelve a abrir la app. macOS en Apple Silicon requiere al menos una firma ad-hoc; este
+   build la incluye, pero el paso de aprobación sigue siendo necesario porque la app no está
+   notarizada.
 
-As an advanced last resort, if you trust the downloaded file and the checksum
-matches, you can remove the quarantine attribute:
+Como último recurso avanzado, si confías en el archivo descargado y el checksum coincide,
+puedes quitar el atributo de cuarentena:
 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/Ecuador Indicators.app"
 ```
 
-Prefer the **Open Anyway** flow; disabling Gatekeeper globally or stripping
-quarantine from untrusted files reduces the protection of your machine.
+Prefiere el flujo **Open Anyway**; desactivar Gatekeeper de forma global o quitar la
+cuarentena a archivos no confiables reduce la protección de tu equipo.
 
 ## Linux
 
@@ -135,60 +136,59 @@ sudo dnf install ./ecuador-indicators_0.1.0_linux_x64.rpm
 ecuador-indicators
 ```
 
-### AppImage (any distribution)
+### AppImage (cualquier distribución)
 
 ```bash
 chmod +x ecuador-indicators_0.1.0_linux_x64.AppImage
 ./ecuador-indicators_0.1.0_linux_x64.AppImage
 ```
 
-The AppImage needs FUSE. If FUSE is not available, extract and run it in one
-step:
+El AppImage necesita FUSE. Si FUSE no está disponible, extrae y ejecútalo en un solo paso:
 
 ```bash
 ./ecuador-indicators_0.1.0_linux_x64.AppImage --appimage-extract-and-run
 ```
 
-The desktop entry is installed by the `.deb` and `.rpm` packages; the AppImage
-can be integrated manually with your desktop environment. The Linux build needs
-WebKitGTK 4.1, which current Debian/Ubuntu and Fedora releases provide.
+La entrada de escritorio la instalan los paquetes `.deb` y `.rpm`; el AppImage puede
+integrarse manualmente con tu entorno de escritorio. El build de Linux necesita
+WebKitGTK 4.1, que proveen las versiones actuales de Debian/Ubuntu y Fedora.
 
-## What the application writes
+## Qué escribe la aplicación
 
-The application is local-first and has no server, account or telemetry.
+La aplicación es local-first y no tiene servidor, cuenta ni telemetría.
 
-| Data | Linux | macOS | Windows |
+| Datos | Linux | macOS | Windows |
 |---|---|---|---|
-| Saved views and settings (`user.db`) | `$XDG_DATA_HOME/io.github.eduardo12pacheco.ecuadorindicators` (default `~/.local/share/...`) | `~/Library/Application Support/io.github.eduardo12pacheco.ecuadorindicators` | `%APPDATA%\io.github.eduardo12pacheco.ecuadorindicators` |
-| Rolling log files | `$XDG_DATA_HOME/io.github.eduardo12pacheco.ecuadorindicators` | `~/Library/Logs/io.github.eduardo12pacheco.ecuadorindicators` | `%LOCALAPPDATA%\io.github.eduardo12pacheco.ecuadorindicators` |
+| Vistas guardadas y ajustes (`user.db`) | `$XDG_DATA_HOME/io.github.eduardo12pacheco.ecuadorindicators` (por defecto `~/.local/share/...`) | `~/Library/Application Support/io.github.eduardo12pacheco.ecuadorindicators` | `%APPDATA%\io.github.eduardo12pacheco.ecuadorindicators` |
+| Archivos de log rotativos | `$XDG_DATA_HOME/io.github.eduardo12pacheco.ecuadorindicators` | `~/Library/Logs/io.github.eduardo12pacheco.ecuadorindicators` | `%LOCALAPPDATA%\io.github.eduardo12pacheco.ecuadorindicators` |
 
-The bundled World Bank snapshot is opened read-only and is never modified. A
-custom snapshot chosen in Settings is also opened read-only and can be reset to
-the bundled one at any time. The environment variables
-`ECUADOR_INDICATORS_HOME`, `ECUADOR_INDICATORS_LOG` and
-`ECUADOR_INDICATORS_SNAPSHOT` override those locations for portable or
-diagnostic setups.
+La instantánea del Banco Mundial incluida se abre en modo solo lectura y nunca se modifica.
+Una instantánea personalizada elegida en Ajustes también se abre en modo solo lectura y
+puede restablecerse a la incluida en cualquier momento. Las variables de entorno
+`ECUADOR_INDICATORS_HOME`, `ECUADOR_INDICATORS_LOG` y `ECUADOR_INDICATORS_SNAPSHOT`
+sustituyen esas ubicaciones para configuraciones portátiles o de diagnóstico.
 
-## Uninstall
+## Desinstalar
 
-- **Windows:** Settings → Apps → Ecuador Indicators → Uninstall. The NSIS
-  uninstaller removes the application; delete `%APPDATA%` and `%LOCALAPPDATA%`
-  folders listed above to remove saved views, settings and logs.
-- **macOS:** quit the app, drag **Ecuador Indicators** from `/Applications` to
-  the Trash, then remove the Application Support and Logs folders listed above
-  if you also want to delete your data.
-- **Linux:** `sudo apt remove ecuador-indicators` or
-  `sudo dnf remove ecuador-indicators`; remove the AppImage file if you used it.
-  Delete `$XDG_DATA_HOME/io.github.eduardo12pacheco.ecuadorindicators` to remove
-  saved views, settings and logs.
+- **Windows:** Configuración → Aplicaciones → Ecuador Indicators → Desinstalar. El
+  desinstalador NSIS elimina la aplicación; borra las carpetas `%APPDATA%` y
+  `%LOCALAPPDATA%` indicadas arriba para eliminar vistas guardadas, ajustes y logs.
+- **macOS:** cierra la app, arrastra **Ecuador Indicators** desde `/Applications` a la
+  Papelera y, si también quieres borrar tus datos, elimina las carpetas Application Support
+  y Logs indicadas arriba.
+- **Linux:** `sudo apt remove ecuador-indicators` o `sudo dnf remove ecuador-indicators`;
+  elimina el archivo AppImage si lo usaste. Borra
+  `$XDG_DATA_HOME/io.github.eduardo12pacheco.ecuadorindicators` para eliminar vistas
+  guardadas, ajustes y logs.
 
-## Privacy and limitations
+## Privacidad y limitaciones
 
-The app reads a bundled World Bank WDI snapshot licensed under CC BY 4.0 and
-republishes it; it is not an official statistics product and does not replace
-BCE or INEC publications. Data is annual with the reporting lags documented in
-[`DATA.md`](DATA.md). The only optional network path is the notify-only update
-check, which is **off by default** and, when enabled, contacts the GitHub
-releases API at most once every 24 hours. Export files are written only where
-you choose in the native save dialog. See [`SECURITY.md`](../SECURITY.md) for
-the full privacy and threat-model summary.
+La app lee una instantánea incluida de WDI del Banco Mundial bajo licencia CC BY 4.0 y la
+vuelve a publicar; no es un producto oficial de estadísticas y no reemplaza las
+publicaciones del BCE ni del INEC. Los datos son anuales, con los rezagos de reporte
+documentados en [`DATA.md`](DATA.md). La única ruta de red opcional es la comprobación de
+actualizaciones solo de notificación, que está **desactivada por defecto** y, cuando se
+activa, consulta la API de releases de GitHub como máximo una vez cada 24 horas. Los
+archivos de exportación se escriben solo en la ubicación que elijas en el diálogo nativo de
+guardado. Consulta [`SECURITY.md`](../SECURITY.md) para el resumen completo de privacidad y
+modelo de amenazas.
