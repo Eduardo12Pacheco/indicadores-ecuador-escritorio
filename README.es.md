@@ -1,7 +1,7 @@
 # Ecuador Indicators
 
-[![CI](https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop/actions/workflows/ci.yml/badge.svg)](https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop/actions/workflows/ci.yml)
-[![Último release](https://img.shields.io/github/v/release/Eduardo12Pacheco/ecuador-indicators-desktop)](https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop/releases/latest)
+[![CI](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/actions/workflows/ci.yml/badge.svg)](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/actions/workflows/ci.yml)
+[![Último release](https://img.shields.io/github/v/release/Eduardo12Pacheco/indicadores-ecuador-escritorio)](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/releases/latest)
 [![Licencia: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Plataformas](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-1B47C4)](docs/INSTALL.md)
 

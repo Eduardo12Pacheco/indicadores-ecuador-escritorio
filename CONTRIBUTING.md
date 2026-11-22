@@ -20,8 +20,8 @@ audit jobs, and `WebKitWebDriver` + `tauri-driver` for native E2E on Linux.
 ## Setup
 
 ```bash
-git clone https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop.git
-cd ecuador-indicators-desktop
+git clone https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio.git
+cd indicadores-ecuador-escritorio
 npm ci
 cd pipeline && uv sync --frozen && cd ..
 ```

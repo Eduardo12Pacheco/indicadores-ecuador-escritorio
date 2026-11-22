@@ -96,7 +96,7 @@ prerelease.
 
   ```bash
   gh attestation verify ecuador-indicators_0.2.0_linux_x64.deb \
-    --repo Eduardo12Pacheco/ecuador-indicators-desktop
+    --repo Eduardo12Pacheco/indicadores-ecuador-escritorio
   ```
 
 - The release notes have Features, Bug Fixes, Documentation, Tests and

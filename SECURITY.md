@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Report security issues privately through
-[GitHub Security Advisories](https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop/security/advisories/new).
+[GitHub Security Advisories](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/security/advisories/new).
 Do not open a public issue for an unfixed vulnerability. Include the affected
 version, the operating system, a minimal reproduction and the impact you
 observed. Reports are acknowledged on a best-effort basis; this is a

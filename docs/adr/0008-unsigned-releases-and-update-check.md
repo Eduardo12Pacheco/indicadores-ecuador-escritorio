@@ -58,7 +58,7 @@ Evidence checked on 2026-11-19:
    off by default, throttled to once every 24 hours at launch, and it only
    displays the version and a link that opens in the system browser. It never
    downloads or executes an update. The release feed is
-   `https://api.github.com/repos/Eduardo12Pacheco/ecuador-indicators-desktop/releases/latest`,
+   `https://api.github.com/repos/Eduardo12Pacheco/indicadores-ecuador-escritorio/releases/latest`,
    overridable with `ECUADOR_INDICATORS_UPDATE_URL` for tests.
 5. **Document the limitations above the fold.** `docs/INSTALL.md` explains the
    SmartScreen and Smart App Control behavior, the macOS Gatekeeper approval,

@@ -17,7 +17,7 @@ to verify that the file you downloaded is the one the project published.
 
 ## Download
 
-Open the [latest release](https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop/releases/latest)
+Open the [latest release](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/releases/latest)
 and pick the file that matches your operating system. Asset names follow
 `ecuador-indicators_<version>_<platform>_<arch>.<ext>`.
 
@@ -56,7 +56,7 @@ installed and authenticated:
 
 ```bash
 gh attestation verify ecuador-indicators_0.1.0_linux_x64.deb \
-  --repo Eduardo12Pacheco/ecuador-indicators-desktop
+  --repo Eduardo12Pacheco/indicadores-ecuador-escritorio
 ```
 
 The same command works for the `.exe`, `.msi` and `.dmg` files. A successful
