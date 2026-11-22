@@ -1,23 +1,23 @@
-# Contributing
+# Contribuir
 
-Ecuador Indicators is a local-first desktop app with three runtimes: TypeScript
-(UI and domain), Rust (desktop shell and core services) and Python (data
-pipeline). Contributions are welcome as focused pull requests that keep the
-architecture and the tests honest.
+Ecuador Indicators es una aplicación de escritorio local-first con tres runtimes:
+TypeScript (UI y dominio), Rust (shell de escritorio y servicios del núcleo) y Python
+(pipeline de datos). Las contribuciones son bienvenidas como pull requests enfocados que
+mantengan honestas la arquitectura y las pruebas.
 
-## Prerequisites
+## Requisitos previos
 
-| Tool | Version | Notes |
+| Herramienta | Versión | Notas |
 |---|---|---|
-| Node.js | 26 recommended, `>=24` | npm 11 ships with Node; the repository does not use pnpm or corepack. |
-| Rust | stable, `>=1.95` | `rustfmt` and `clippy` components. |
-| uv | `>=0.11` | Python 3.12 is resolved by `.python-version`. |
-| Tauri system packages | per OS | Windows: WebView2 and the MSVC build tools. macOS: Xcode Command Line Tools. Linux: `libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `patchelf`, `xdg-utils`. |
+| Node.js | 26 recomendado, `>=24` | npm 11 viene con Node; el repositorio no usa pnpm ni corepack. |
+| Rust | stable, `>=1.95` | Componentes `rustfmt` y `clippy`. |
+| uv | `>=0.11` | Python 3.12 lo resuelve `.python-version`. |
+| Paquetes del sistema para Tauri | según el SO | Windows: WebView2 y las herramientas de build de MSVC. macOS: Xcode Command Line Tools. Linux: `libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `patchelf`, `xdg-utils`. |
 
-Optional: `gh` for releases and attestations, `cargo-deny`/`cargo-audit` for the
-audit jobs, and `WebKitWebDriver` + `tauri-driver` for native E2E on Linux.
+Opcional: `gh` para releases y atestaciones, `cargo-deny` y `cargo-audit` para los jobs de
+auditoría, y `WebKitWebDriver` + `tauri-driver` para el E2E nativo en Linux.
 
-## Setup
+## Configuración
 
 ```bash
 git clone https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio.git
@@ -26,69 +26,69 @@ npm ci
 cd pipeline && uv sync --frozen && cd ..
 ```
 
-Windows (PowerShell) uses the same commands; `npm ci` and `uv sync` are
-cross-platform. The pipeline commands below assume you are inside `pipeline/`
-when they say so.
+En Windows (PowerShell) se usan los mismos comandos; `npm ci` y `uv sync` son
+multiplataforma. Los comandos del pipeline asumen que estás dentro de `pipeline/` cuando lo
+indican.
 
-## Commands
+## Comandos
 
-| Area | Command |
+| Área | Comando |
 |---|---|
-| All local gates | `npm run verify` |
-| Fast web loop | `npm run verify:fast` |
+| Todas las puertas locales | `npm run verify` |
+| Ciclo web rápido | `npm run verify:fast` |
 | Lint | `npm run lint` |
-| Format | `npm run format` |
-| Types | `npm run typecheck` |
-| Unit and component tests | `npm test` |
-| Coverage gates | `npm run test:cov` |
-| Rust format, clippy and tests | `npm run verify:rust` |
-| Pipeline lint, types, tests and imports | `npm run verify:pipeline` |
-| Browser E2E | `npm run test:e2e` |
-| Native E2E (Linux, prerequisites required) | `npm run e2e:native` |
-| Data integrity | `npm run check:data` |
-| Bindings drift | `npm run check:bindings` |
-| Bundle budget | `npm run build && npm run check:bundle` |
-| Production licences | `npm run check:licenses` |
-| Measured metrics | `npm run metrics` |
-| Regenerate screenshots and GIF | `npm run capture:media` |
+| Formato | `npm run format` |
+| Tipos | `npm run typecheck` |
+| Pruebas unitarias y de componentes | `npm test` |
+| Puertas de cobertura | `npm run test:cov` |
+| Formato, clippy y pruebas de Rust | `npm run verify:rust` |
+| Lint, tipos, pruebas e imports del pipeline | `npm run verify:pipeline` |
+| E2E de navegador | `npm run test:e2e` |
+| E2E nativo (Linux, requiere prerrequisitos) | `npm run e2e:native` |
+| Integridad de datos | `npm run check:data` |
+| Drift de bindings | `npm run check:bindings` |
+| Presupuesto del bundle | `npm run build && npm run check:bundle` |
+| Licencias de producción | `npm run check:licenses` |
+| Métricas medidas | `npm run metrics` |
+| Regenerar capturas y GIF | `npm run capture:media` |
 
-Use `npm test -- <pattern>` for a focused Vitest run, `cargo test -p
-indicators-core <name>` for Rust and `uv run pytest tests/unit/<file> -q` inside
-`pipeline/` for Python. The full command matrix and CI mapping are in
+Usa `npm test -- <patrón>` para una ejecución enfocada de Vitest, `cargo test -p
+indicators-core <nombre>` para Rust y `uv run pytest tests/unit/<archivo> -q` dentro de
+`pipeline/` para Python. La matriz completa de comandos y el mapeo con CI están en
 [docs/TESTING.md](docs/TESTING.md).
 
-## Repository rules
+## Reglas del repositorio
 
-The dependency direction is binding and tested:
+La dirección de las dependencias es vinculante y está probada:
 
-- TypeScript `core/domain` imports nothing outside itself; `core/application`
-  may import the domain and its own ports; adapters may import the core; the
-  UI may not import adapters, the composition root or `@tauri-apps/*`.
-- Rust `domain`, `ports` and `application` may not import `rusqlite`, `ureq`,
-  `tauri`, `std::fs`, `std::net` or `std::env`; those belong to adapters and the
-  shell.
-- Python `domain` may not import `httpx`, `duckdb` or `sqlite3`; `application`
-  may not import adapters.
+- `core/domain` de TypeScript no importa nada fuera de sí mismo; `core/application` puede
+  importar el dominio y sus propios puertos; los adaptadores pueden importar el núcleo; la UI
+  no puede importar adaptadores, la raíz de composición ni `@tauri-apps/*`.
+- `domain`, `ports` y `application` de Rust no pueden importar `rusqlite`, `ureq`, `tauri`,
+  `std::fs`, `std::net` ni `std::env`; eso pertenece a los adaptadores y al shell.
+- `domain` de Python no puede importar `httpx`, `duckdb` ni `sqlite3`; `application` no puede
+  importar adaptadores.
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before adding a feature. New
-OS integration goes behind a port. New product logic goes in the TypeScript
-core or a use case, not in a React component or a Tauri command. New user-facing
-strings go into both `src/ui/i18n/en.ts` and `es.ts` in the same commit. Data
-changes go through the pipeline in [docs/DATA.md](docs/DATA.md); never hand-edit
-`data/raw/**` or the SQLite snapshot.
+Lee [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) antes de agregar una funcionalidad. Una nueva
+integración con el sistema operativo va detrás de un puerto. La lógica de producto nueva va en
+el núcleo de TypeScript o en un caso de uso, no en un componente de React ni en un comando de
+Tauri. Los textos nuevos visibles para el usuario deben ir en `src/ui/i18n/en.ts` y `es.ts` en
+el mismo commit. Los cambios de datos pasan por el pipeline de [docs/DATA.md](docs/DATA.md);
+nunca edites a mano `data/raw/**` ni la instantánea SQLite.
 
-## Test-first workflow
+## Flujo test-first
 
-1. Write or update the failing test that describes the behaviour (RED).
-2. Implement the smallest change that makes it pass (GREEN).
-3. Refactor with the suite green. Never weaken, skip or delete a test to get a
-   green build; if a required check cannot run locally, record the exact reason.
-4. Add a property test when a data invariant is involved (fast-check, proptest
-   or Hypothesis) and an axe scan when a new route or dialog is introduced.
+1. Escribe o actualiza la prueba que falla y describe el comportamiento (RED).
+2. Implementa el cambio más pequeño que la haga pasar (GREEN).
+3. Refactoriza con la suite en verde. Nunca debilites, omitas ni borres una prueba para
+   obtener un build verde; si una verificación requerida no puede ejecutarse en local, registra
+   el motivo exacto.
+4. Agrega una prueba de propiedades cuando intervenga un invariante de datos (fast-check,
+   proptest o Hypothesis) y un escaneo de axe cuando se introduzca una ruta o un diálogo nuevo.
 
-## Commit convention
+## Convención de commits
 
-Use Conventional Commits in English:
+Los commits siguen Conventional Commits y se escriben en inglés:
 
 ```
 feat(explore): add a year-range preset control
@@ -99,29 +99,29 @@ ci: add the native e2e job
 chore: bump the playwright lockfile
 ```
 
-Keep commits focused and reviewable (about 400 changed lines or fewer). Do not
-add `Co-Authored-By` or AI-attribution trailers. Do not rewrite published
-history.
+Mantén los commits enfocados y revisables (unas 400 líneas cambiadas o menos). No agregues
+trailers `Co-Authored-By` ni de atribución de IA. No reescribas el historial publicado.
 
-## Pull request checklist
+## Lista de verificación del pull request
 
-- [ ] The change is described in one paragraph and linked to an ADR/spec when it
-      changes a contract.
-- [ ] Tests were written first and still pass: `npm run verify` (or the focused
-      commands plus a note explaining why a CI-only gate cannot run locally).
-- [ ] `npm run lint`, `npm run typecheck` and the coverage thresholds are green.
-- [ ] New UI strings exist in English and Spanish; axe scans cover new routes
-      and dialogs in both themes.
-- [ ] No secrets, personal data, absolute home paths or large generated files
-      are added to git.
-- [ ] `data/MANIFEST.json`, the snapshot and the fixtures agree with the
-      pipeline output when data changes.
-- [ ] `CHANGELOG.md` needs no manual edit: it is generated from commits at
-      release time.
+- [ ] El cambio se describe en un párrafo y se vincula a un ADR o a una especificación cuando
+      modifica un contrato.
+- [ ] Las pruebas se escribieron primero y siguen pasando: `npm run verify` (o los comandos
+      enfocados más una nota que explique por qué una puerta exclusiva de CI no puede ejecutarse
+      en local).
+- [ ] `npm run lint`, `npm run typecheck` y los umbrales de cobertura están en verde.
+- [ ] Los textos nuevos de la UI existen en inglés y en español; los escaneos de axe cubren las
+      rutas y los diálogos nuevos en ambos temas.
+- [ ] No se agregan a git secretos, datos personales, rutas absolutas del home ni archivos
+      generados de gran tamaño.
+- [ ] `data/MANIFEST.json`, la instantánea y los fixtures coinciden con la salida del pipeline
+      cuando cambian los datos.
+- [ ] `CHANGELOG.md` no necesita edición manual: se genera a partir de los commits al momento de
+      la release.
 
-## Reporting bugs and security issues
+## Reportar errores y problemas de seguridad
 
-Use the GitHub issue templates for functional bugs and feature requests. Report
-security issues privately through GitHub Security Advisories as described in
-[SECURITY.md](SECURITY.md); do not open a public issue for an unfixed
-vulnerability.
+Usa las plantillas de incidencias de GitHub para los errores funcionales y las solicitudes de
+funcionalidades. Reporta los problemas de seguridad de forma privada mediante GitHub Security
+Advisories, tal como se describe en [SECURITY.md](SECURITY.md); no abras una incidencia pública
+por una vulnerabilidad sin corregir.
