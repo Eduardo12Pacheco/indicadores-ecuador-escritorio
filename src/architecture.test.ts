@@ -11,8 +11,13 @@ import { dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+/** Forward-slash form of a path, so Windows (`\`) and POSIX (`/`) paths compare equal. */
+function toPosix(path: string): string {
+  return path.replace(/\\/g, "/");
+}
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const SRC = join(ROOT, "src");
+const SRC = toPosix(join(ROOT, "src"));
 
 interface ImportEdge {
   readonly file: string;
@@ -81,14 +86,14 @@ function importSpecifiers(source: string): string[] {
 }
 
 function relativeToSrc(absolute: string): string {
-  return relative(SRC, absolute).split("\\").join("/");
+  return toPosix(relative(SRC, absolute));
 }
 
 function resolveSpecifier(file: string, specifier: string): string {
   if (!specifier.startsWith(".")) {
     return specifier;
   }
-  const resolved = normalize(resolve(dirname(file), specifier)).replace(/\\/g, "/");
+  const resolved = toPosix(normalize(resolve(dirname(file), specifier)));
   if (resolved.startsWith(`${SRC}/`)) {
     return relativeToSrc(resolved);
   }
@@ -162,6 +167,13 @@ function violations(owner: string, allowed: readonly string[]): string[] {
     return !allowed.includes(destination);
   }).map((edge) => `${edge.file} -> ${edge.specifier}`);
 }
+
+describe("path normalization", () => {
+  it("turns backslash separators into forward slashes", () => {
+    expect(toPosix("core\\domain\\result.ts")).toBe("core/domain/result.ts");
+    expect(toPosix("core/domain/result.ts")).toBe("core/domain/result.ts");
+  });
+});
 
 describe("TypeScript dependency rules", () => {
   it("finds the source modules", () => {
