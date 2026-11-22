@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     user_agent: str = Field(
         default=(
             f"ecuador-data/{__version__} "
-            "(+https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop)"
+            "(+https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio)"
         ),
         min_length=1,
     )

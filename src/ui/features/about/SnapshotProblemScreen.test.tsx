@@ -55,7 +55,7 @@ describe("SnapshotProblemScreen", () => {
     const { externalOpen } = setup();
     await userEvent.click(screen.getByRole("button", { name: "Read the installation notes" }));
     expect(externalOpen).toHaveBeenCalledWith(
-      "https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop/blob/main/docs/INSTALL.md",
+      "https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/blob/main/docs/INSTALL.md",
     );
   });
 });

@@ -23,7 +23,7 @@ pub const RESOURCE_SNAPSHOT: &str = "data/ecuador-indicators.snapshot.sqlite";
 pub const RESOURCE_MANIFEST: &str = "data/MANIFEST.json";
 /// Default release feed (D17).
 pub const DEFAULT_UPDATE_URL: &str =
-    "https://api.github.com/repos/Eduardo12Pacheco/ecuador-indicators-desktop/releases/latest";
+    "https://api.github.com/repos/Eduardo12Pacheco/indicadores-ecuador-escritorio/releases/latest";
 
 /// Application settings needed before Tauri starts.
 #[derive(Debug, Clone, PartialEq, Eq)]

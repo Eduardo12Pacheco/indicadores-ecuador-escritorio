@@ -18,7 +18,7 @@ import { usePorts } from "../../ports-context";
 import styles from "./SnapshotProblemScreen.module.css";
 
 const INSTALL_URL =
-  "https://github.com/Eduardo12Pacheco/ecuador-indicators-desktop/blob/main/docs/INSTALL.md";
+  "https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/blob/main/docs/INSTALL.md";
 
 /** Recovery screen for an invalid or missing active snapshot. */
 export function SnapshotProblemScreen({ error }: { readonly error: AppError }) {
