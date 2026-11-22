@@ -105,7 +105,7 @@ export function collectMetrics({ root = defaultRoot } = {}) {
       indicators: Number(counts.indicators ?? 0),
       observations: Number(counts.observations ?? 0),
     },
-    gates: { rustCoreLineCoveragePercent: 85 },
+    gates: { rustCoreLineCoverageGatePercent: 85 },
   };
 }
 
