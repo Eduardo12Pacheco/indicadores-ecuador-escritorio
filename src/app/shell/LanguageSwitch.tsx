@@ -8,6 +8,7 @@ export function LanguageSwitch() {
   return (
     <select
       className={styles.select}
+      data-testid="language-switch"
       aria-label={t("shell.switchLanguage")}
       value={lang}
       onChange={(event) => setLang(event.target.value as Lang)}
