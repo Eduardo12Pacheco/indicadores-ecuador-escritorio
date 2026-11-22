@@ -26,7 +26,9 @@ export async function waitForApp(): Promise<void> {
     timeout: 30_000,
     timeoutMsg: "the native window did not report the product title",
   });
-  await $('[data-testid="catalog-option"]').waitForDisplayed({ timeout: 20_000 });
+  // The listbox is the unique test id that appears with the first catalog render.
+  // The option test id matches every indicator (38), which WebdriverIO strict mode rejects.
+  await $('[data-testid="catalog-listbox"]').waitForDisplayed({ timeout: 20_000 });
 }
 
 /** Sends a shortcut with the platform modifier the app expects. */
