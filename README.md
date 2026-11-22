@@ -105,7 +105,7 @@ tested in all three languages; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | TypeScript coverage | 91.7% lines · 83.87% branches · 91.67% statements · 91.56% functions |
 | Python pipeline coverage | 96.1% |
 | Browser E2E | 68 scenarios (Chromium + WebKit projects) |
-| Rust core line coverage | 92.1% (CI gate: 85%, `cargo llvm-cov`) |
+| Rust core line coverage | 88.9% measured in CI run 44749667530 (gate: 85%, `cargo llvm-cov`) |
 | JavaScript gzip total | 392,397 B |
 | Bundled snapshot | 38 indicators · 8 topics · 7 geographies · 11,780 observations |
 

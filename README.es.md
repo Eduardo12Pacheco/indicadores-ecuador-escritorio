@@ -122,7 +122,7 @@ patrones y el modelo de errores.
 | Cobertura TypeScript | 91.7% líneas · 83.87% ramas · 91.67% sentencias · 91.56% funciones |
 | Cobertura del pipeline Python | 96.1% |
 | E2E de navegador | 68 escenarios (proyectos Chromium + WebKit) |
-| Cobertura de líneas del núcleo Rust | 92.1% (puerta en CI: 85%, `cargo llvm-cov`) |
+| Cobertura de líneas del núcleo Rust | 88.9% medido en la ejecución de CI 44749667530 (puerta: 85%, `cargo llvm-cov`) |
 | Total gzip de JavaScript | 392,397 B |
 | Instantánea incluida | 38 indicadores · 8 temas · 7 geografías · 11,780 observaciones |
 

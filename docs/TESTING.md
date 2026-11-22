@@ -125,14 +125,14 @@ Numbers measured on v0.1.0 (2026-11-20):
 | TypeScript lines / branches / statements / functions | 91.7% / 83.87% / 91.67% / 91.56% | `npm run test:cov` → `coverage/coverage-summary.json` |
 | Python pipeline coverage | 96.1% | `uv run pytest` → `pipeline/coverage.json` |
 | Browser E2E scenarios | 68 per browser project; 68 passed on Chromium locally, the WebKit project runs in CI | `npm run test:e2e` → `.generated/playwright.json` (`npm run metrics` → `playwright.scenarios`) |
-| Rust `indicators-core` lines | 92.1% measured (gate 85%) | `cargo llvm-cov -p indicators-core --fail-under-lines 85` |
+| Rust `indicators-core` lines | 88.9% measured in CI run 44749667530 (gate 85%) | `cargo llvm-cov -p indicators-core --fail-under-lines 85` |
 | JavaScript gzip total | 392,397 B (budget 716,800 B) | `npm run build` + `node scripts/check-bundle-size.mjs` |
 | Snapshot | 38 indicators, 8 topics, 7 geographies, 11,780 observations | `data/MANIFEST.json` |
 
-`npm run metrics` prints the same values as JSON, except the Rust number, which
-comes from `cargo llvm-cov` (measured locally with cargo-llvm-cov 0.9.1 and the
-distribution's LLVM tools via `LLVM_COV`/`LLVM_PROFDATA`, and enforced in CI by
-the `rust-coverage` job).
+`npm run metrics` prints the same values as JSON, except the Rust number. That
+number is not measured locally: the `rust-coverage` CI job runs `cargo llvm-cov`,
+enforces the 85% gate, and prints the lines percentage (88.91% in run
+44749667530, the value shown above).
 
 ## CI job map
 
