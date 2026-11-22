@@ -1,69 +1,71 @@
-# Security policy
+# Política de seguridad
 
-## Reporting a vulnerability
+## Reportar una vulnerabilidad
 
-Report security issues privately through
+Repórtala de forma privada a través de
 [GitHub Security Advisories](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/security/advisories/new).
-Do not open a public issue for an unfixed vulnerability. Include the affected
-version, the operating system, a minimal reproduction and the impact you
-observed. Reports are acknowledged on a best-effort basis; this is a
-maintainer-run portfolio project without a paid bug-bounty program.
+No abras una incidencia pública por una vulnerabilidad sin corregir. Incluye la versión
+afectada, el sistema operativo, una reproducción mínima y el impacto que observaste. Los
+reportes se confirman con base en el mejor esfuerzo; este es un proyecto de portafolio mantenido
+por su autor, sin un programa de recompensas por errores pagado.
 
-## Supported versions
+## Versiones soportadas
 
-Security fixes are applied to the latest published release and to `main`.
-Older releases are not maintained.
+Las correcciones de seguridad se aplican a la última release publicada y a `main`. Las versiones
+anteriores no se mantienen.
 
-| Version | Supported |
+| Versión | Soportada |
 |---|---|
-| 0.1.x (current) | yes |
-| older | no |
+| 0.1.x (actual) | sí |
+| anteriores | no |
 
-## Privacy
+## Privacidad
 
-- No accounts, telemetry, analytics, crash uploads or advertising identifiers.
-- The application does not open a socket except for the optional update check
-  (`UpdateService::check`), which is off by default. When enabled it requests
-  the public GitHub release feed at most once every 24 hours, shows the version
-  and a link, and never downloads or installs anything.
-- Saved views and settings stay in `user.db` in the app data directory; exports
-  are written only to the path the user chooses in the native save dialog.
-- The bundled dataset contains country-level World Bank statistics, not personal
-  data.
+- Sin cuentas, telemetría, analítica, envío de reportes de fallos ni identificadores
+  publicitarios.
+- La aplicación no abre ningún socket, salvo la comprobación opcional de actualizaciones
+  (`UpdateService::check`), que está desactivada por defecto. Cuando está activada, solicita el
+  feed público de releases de GitHub como máximo una vez cada 24 horas, muestra la versión y un
+  enlace, y nunca descarga ni instala nada.
+- Las vistas guardadas y los ajustes permanecen en `user.db`, dentro del directorio de datos de
+  la aplicación; las exportaciones se escriben solo en la ruta que la persona usuaria elige en el
+  diálogo nativo de guardado.
+- El conjunto de datos incluido contiene estadísticas del Banco Mundial a nivel de país, no datos
+  personales.
 
-## Threat model
+## Modelo de amenazas
 
-The application is a local desktop app with a Tauri webview. The relevant
-boundaries and mitigations are:
+La aplicación es una app de escritorio local con un webview de Tauri. Las fronteras relevantes y
+sus mitigaciones son:
 
-| Asset / boundary | Mitigation |
+| Activo o frontera | Mitigación |
 |---|---|
-| Webview to native IPC | Only the 14 registered commands are exposed; every payload is validated in Rust and in TypeScript with zod. Errors use the stable `ErrorDto` codes instead of leaking internals. |
-| Custom snapshot file | Opened read-only (`SQLITE_OPEN_READ_ONLY`, `PRAGMA query_only = ON`) after validating `user_version`, `meta.schema_version`, required tables and `PRAGMA quick_check`. An invalid file leaves the previous dataset active. |
-| Export destination | The Rust core accepts only `.csv` and `.png` paths, requires a file name, caps content at 50 MiB and writes through a temporary file plus rename. |
-| Tauri capabilities | No filesystem, shell or HTTP plugin. Dialog and opener are the only extra permissions; the opener is scoped to an explicit allowlist of GitHub, World Bank and Creative Commons URLs. |
-| Remote content | Strict CSP: `default-src 'self'`, `connect-src ipc: http://ipc.localhost`, no remote scripts, styles, fonts or images. Fonts are vendored locally. |
-| Update check | Opt-in, notify-only, no auto-download, semver comparison, errors surfaced without retry loops. The feed URL can be overridden for tests, not by untrusted input. |
-| Supply chain | Lockfiles for npm, Cargo and uv; `npm audit`, `cargo audit`, `cargo deny`, `pip-audit` and gitleaks in CI; checksums and GitHub build-provenance attestations on releases. |
-| Downloaded installers | Builds are unsigned (documented in `docs/INSTALL.md`), so users must verify `SHA256SUMS.txt` or `gh attestation verify` before trusting a file obtained outside the release page. |
+| Webview hacia IPC nativo | Solo se exponen los 14 comandos registrados; cada payload se valida en Rust y en TypeScript con zod. Los errores usan los códigos estables de `ErrorDto` en lugar de filtrar detalles internos. |
+| Archivo de instantánea personalizada | Se abre en modo solo lectura (`SQLITE_OPEN_READ_ONLY`, `PRAGMA query_only = ON`) después de validar `user_version`, `meta.schema_version`, las tablas obligatorias y `PRAGMA quick_check`. Un archivo inválido deja activo el conjunto de datos anterior. |
+| Destino de exportación | El núcleo de Rust acepta solo rutas `.csv` y `.png`, exige un nombre de archivo, limita el contenido a 50 MiB y escribe a través de un archivo temporal seguido de un renombrado. |
+| Capabilities de Tauri | Sin plugins de sistema de archivos, shell ni HTTP. Dialog y opener son los únicos permisos adicionales; opener está limitado a una lista explícita de URLs de GitHub, del Banco Mundial y de Creative Commons. |
+| Contenido remoto | CSP estricta: `default-src 'self'`, `connect-src ipc: http://ipc.localhost`, sin scripts, estilos, fuentes ni imágenes remotos. Las fuentes se incluyen localmente. |
+| Comprobación de actualizaciones | Optativa, solo de notificación, sin descarga automática, comparación semver y errores visibles sin bucles de reintento. La URL del feed puede sobrescribirse para las pruebas, nunca por una entrada no confiable. |
+| Cadena de suministro | Lockfiles para npm, Cargo y uv; `npm audit`, `cargo audit`, `cargo deny`, `pip-audit` y gitleaks en CI; checksums y atestaciones de procedencia del build de GitHub en las releases. |
+| Instaladores descargados | Los builds no están firmados (documentado en `docs/INSTALL.md`), así que las personas usuarias deben verificar `SHA256SUMS.txt` o `gh attestation verify` antes de confiar en un archivo obtenido fuera de la página de releases. |
 
-## Out of scope
+## Fuera de alcance
 
-- An attacker with control of the user's OS account, the desktop session or the
-  downloaded binary before checksum verification.
-- Vulnerabilities in the user's installed WebView2/WebKitGTK runtime or GPU
-  driver.
-- Denial of service through an extremely large custom snapshot chosen by the
-  user; validation rejects invalid schemas but the app does not impose a file
-  size limit on that path.
-- The unsigned-build warnings themselves (SmartScreen, Smart App Control,
-  Gatekeeper); they are an honest distribution trade-off documented in
-  [docs/INSTALL.md](docs/INSTALL.md), not a vulnerability.
+- Un atacante con control de la cuenta del sistema operativo de la persona usuaria, de la sesión
+  de escritorio o del binario descargado antes de la verificación del checksum.
+- Vulnerabilidades en el runtime de WebView2 o WebKitGTK instalado por la persona usuaria, o en
+  el driver gráfico.
+- Denegación de servicio mediante una instantánea personalizada extremadamente grande elegida
+  por la persona usuaria; la validación rechaza los esquemas inválidos, pero la app no impone un
+  límite de tamaño de archivo en esa ruta.
+- Las advertencias de los builds sin firma en sí mismas (SmartScreen, Smart App Control,
+  Gatekeeper); son una compensación de distribución documentada con honestidad en
+  [docs/INSTALL.md](docs/INSTALL.md), no una vulnerabilidad.
 
-## Dependency and disclosure policy
+## Política de dependencias y divulgación
 
-Dependencies are audited in CI and pinned by lockfiles. A report that only
-affects an outdated dependency is still useful: include the advisory id and the
-affected package/version. Fixes ship as a patch release; the release page and
-the opt-in update notification are the disclosure channel. Please give the
-maintainer reasonable time to ship a fix before publishing details.
+Las dependencias se auditan en CI y se fijan mediante lockfiles. Un reporte que solo afecta a una
+dependencia desactualizada sigue siendo útil: incluye el id del advisory y el paquete y la versión
+afectados. Las correcciones se publican como release de parche; la página de releases y la
+notificación opcional de actualización son el canal de divulgación. Concede a la persona
+mantenedora un plazo razonable para publicar una corrección antes de difundir los detalles.
