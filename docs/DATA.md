@@ -1,108 +1,108 @@
-# Data guide
+# Guía de datos
 
-Ecuador Indicators is an offline-first application that republishes a bundled
-subset of the World Bank's World Development Indicators (WDI). It is not an
-official statistics product and does not claim to be one.
+Ecuador Indicators es una aplicación offline-first que vuelve a publicar un subconjunto
+incluido de los World Development Indicators (WDI) del Banco Mundial. No es un producto
+oficial de estadísticas y no pretende serlo.
 
-## Source and licence
+## Fuente y licencia
 
-| Item | Value |
+| Elemento | Valor |
 |---|---|
-| Source | World Bank, World Development Indicators (WDI), source id 2 |
-| API | `https://api.worldbank.org/v2` (no key) |
-| Dataset page | <https://datacatalog.worldbank.org/search/dataset/0037712/world-development-indicators> |
-| Licence | CC BY 4.0, <https://creativecommons.org/licenses/by/4.0/> |
-| Terms | <https://datacatalog.worldbank.org/public-licenses> |
-| Retrieval | `path` / `url` / `sha256` per file in `data/MANIFEST.json` |
-| Coverage | Annual observations from 1960 to 2026 (the API range), seven geographies |
-| Indicators | 38, curated in `pipeline/catalog/indicators.toml`, across 8 topics |
-| Geographies | ECU, COL, PER, CHL, BOL, Latin America & Caribbean (LCN), World (WLD) |
+| Fuente | Banco Mundial, World Development Indicators (WDI), source id 2 |
+| API | `https://api.worldbank.org/v2` (sin clave) |
+| Página del dataset | <https://datacatalog.worldbank.org/search/dataset/0037712/world-development-indicators> |
+| Licencia | CC BY 4.0, <https://creativecommons.org/licenses/by/4.0/> |
+| Términos | <https://datacatalog.worldbank.org/public-licenses> |
+| Obtención | `path` / `url` / `sha256` por archivo en `data/MANIFEST.json` |
+| Cobertura | Observaciones anuales de 1960 a 2026 (el rango de la API), siete geografías |
+| Indicadores | 38, seleccionados en `pipeline/catalog/indicators.toml`, en 8 temas |
+| Geografías | ECU, COL, PER, CHL, BOL, América Latina y el Caribe (LCN), Mundo (WLD) |
 
-The full attribution text is stored in the snapshot (`meta.attribution_en` and
-`meta.attribution_es`) and shown in the application. Underlying providers such
-as ILO, UNESCO, WHO, FAO, UNODC, ITU, IMF, UN and the World Bank itself are
-credited per indicator through `source_org_en` / `source_org_es`. See
+El texto completo de la atribución se almacena en la instantánea (`meta.attribution_en` y
+`meta.attribution_es`) y se muestra en la aplicación. Los proveedores subyacentes, como
+ILO, UNESCO, WHO, FAO, UNODC, ITU, IMF, UN y el propio Banco Mundial, se acreditan por
+indicador mediante `source_org_en` / `source_org_es`. Consulta
 [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).
 
-The bundled snapshot is generated data. Never edit `data/raw/**` or the SQLite
-file by hand: refresh or rebuild it with the commands below.
+La instantánea incluida son datos generados. Nunca edites `data/raw/**` ni el archivo
+SQLite a mano: actualízala o reconstrúyela con los comandos de abajo.
 
-## Bundled snapshot
+## Instantánea incluida
 
-`data/snapshot/ecuador-indicators.snapshot.sqlite` is a SQLite database with
-schema version 1 (`PRAGMA user_version = 1`). The exact DDL lives in
+`data/snapshot/ecuador-indicators.snapshot.sqlite` es una base de datos SQLite con esquema
+versión 1 (`PRAGMA user_version = 1`). El DDL exacto está en
 `pipeline/src/ecuador_data/adapters/sqlite_snapshot.py`:
 
-| Table | Contents |
+| Tabla | Contenido |
 |---|---|
-| `meta` | Provenance: schema, dataset, origin, source, retrieval date, licence, attribution, pipeline version, logical hash |
-| `topic` | 8 curated topics with English and Spanish names and sort order |
-| `geography` | 7 geographies with ISO codes, bilingual names, aggregate flag |
-| `indicator` | 38 indicators with bilingual names, descriptions and source organizations, unit labels, value kind, decimals, `higher_is`, topic and order |
-| `observation` | One row per indicator, geography and year with a finite `REAL` value |
+| `meta` | Procedencia: esquema, dataset, origen, fuente, fecha de obtención, licencia, atribución, versión del pipeline, hash lógico |
+| `topic` | 8 temas seleccionados, con nombres en inglés y español, y orden de presentación |
+| `geography` | 7 geografías con códigos ISO, nombres bilingües y marca de agregado |
+| `indicator` | 38 indicadores con nombres y descripciones bilingües, organizaciones de origen, etiquetas de unidad, `value_kind`, decimales, `higher_is`, tema y orden |
+| `observation` | Una fila por indicador, geografía y año, con un valor `REAL` finito |
 
-Required `meta` keys: `schema_version`, `dataset_id`, `dataset_version`,
-`origin` (`worldbank` or `lakehouse`), `source_name`, `source_publisher`,
-`source_last_updated`, `retrieved_at`, `license`, `license_url`,
-`attribution_en`, `attribution_es`, `pipeline_version`, `logical_sha256`.
+Claves obligatorias de `meta`: `schema_version`, `dataset_id`, `dataset_version`, `origin`
+(`worldbank` o `lakehouse`), `source_name`, `source_publisher`, `source_last_updated`,
+`retrieved_at`, `license`, `license_url`, `attribution_en`, `attribution_es`,
+`pipeline_version`, `logical_sha256`.
 
-### Integrity model
+### Modelo de integridad
 
-- Each raw file is canonical JSON (`sort_keys`, compact separators, UTF-8,
-  trailing newline) recorded in `data/MANIFEST.json` with its URL, byte size and
+- Cada archivo raw es JSON canónico (`sort_keys`, separadores compactos, UTF-8, salto de
+  línea final) registrado en `data/MANIFEST.json` con su URL, su tamaño en bytes y su
   SHA-256.
-- `meta.logical_sha256` hashes a canonical text dump of all tables except the
-  hash itself, in table order `topic, geography, indicator, observation, meta`,
-  rows ordered by primary key. Two builds from the same raw cache produce the
-  same logical hash regardless of input row order or SQLite page layout.
-- `data/MANIFEST.json` also records the SHA-256 of the snapshot file bytes, so
-  the shipped file can be matched against the committed manifest.
-- `verify` checks raw checksums, the snapshot file hash, the schema, the counts
-  and the recomputed logical hash; it exits `2` on any mismatch.
+- `meta.logical_sha256` calcula el hash de un volcado de texto canónico de todas las tablas
+  excepto el propio hash, en el orden de tablas `topic, geography, indicator, observation,
+  meta`, con filas ordenadas por clave primaria. Dos builds de la misma caché raw producen el
+  mismo hash lógico, sin importar el orden de las filas de entrada ni la disposición de las
+  páginas de SQLite.
+- `data/MANIFEST.json` también registra el SHA-256 de los bytes del archivo de la instantánea,
+  para que el archivo distribuido pueda compararse con el manifiesto versionado.
+- `verify` revisa los checksums raw, el hash del archivo de la instantánea, el esquema, los
+  conteos y el hash lógico recalculado; termina con código `2` ante cualquier discrepancia.
 
-## Lineage
+## Linaje
 
 ```mermaid
 flowchart LR
-  WB[("World Bank API v2, WDI, CC BY 4.0")] -->|"refresh (network)"| Raw["data/raw/worldbank/*.json + MANIFEST.json sha256"]
-  Raw -->|"build (offline, deterministic)"| Snap[("ecuador-indicators.snapshot.sqlite, schema v1")]
-  LH[("lakehouse .duckdb + manifest v1, optional")] -->|"import-lakehouse"| Snap2[("custom snapshot.sqlite")]
-  Snap -->|"Tauri resource"| App["Desktop app, read-only"]
-  Snap2 -->|"Settings > Open snapshot"| App
-  Snap -->|"export-json mini or full"| Fx["JSON fixtures for the memory adapter"]
-  Raw -->|"verify"| Chk{"checksums + logical hash"}
+  WB[("API v2 del Banco Mundial, WDI, CC BY 4.0")] -->|"refresh (red)"| Raw["data/raw/worldbank/*.json + SHA-256 en MANIFEST.json"]
+  Raw -->|"build (sin conexión, determinista)"| Snap[("ecuador-indicators.snapshot.sqlite, schema v1")]
+  LH[("lakehouse .duckdb + manifiesto v1, opcional")] -->|"import-lakehouse"| Snap2[("snapshot.sqlite personalizada")]
+  Snap -->|"recurso de Tauri"| App["App de escritorio, solo lectura"]
+  Snap2 -->|"Ajustes > Abrir instantánea"| App
+  Snap -->|"export-json mini o full"| Fx["fixtures JSON para el adaptador en memoria"]
+  Raw -->|"verify"| Chk{"checksums + hash lógico"}
   Snap -->|"verify"| Chk
 ```
 
-## Reproduce the dataset
+## Reproducir el dataset
 
-Prerequisites: Python 3.12 and uv (the pipeline pins them in
-`pipeline/pyproject.toml` and `.python-version`). Run from `pipeline/` unless a
-command says otherwise. The default data directory is the repository `data/`;
-override it with `ECUADOR_DATA_DATA_DIR`.
+Requisitos: Python 3.12 y uv (el pipeline los fija en `pipeline/pyproject.toml` y en
+`.python-version`). Ejecuta los comandos desde `pipeline/`, salvo que un comando indique
+lo contrario. El directorio de datos por defecto es `data/` del repositorio; cámbialo con
+`ECUADOR_DATA_DATA_DIR`.
 
 ```bash
 cd pipeline
 uv sync --frozen
 
-# 1. Fetch metadata in English and Spanish plus observations (network).
+# 1. Obtener metadatos en inglés y español, además de las observaciones (red).
 uv run ecuador-data refresh
 
-# 2. Build the deterministic snapshot and update data/MANIFEST.json.
+# 2. Construir la instantánea determinista y actualizar data/MANIFEST.json.
 uv run ecuador-data build
 
-# 3. Check raw checksums, snapshot schema, counts and both hashes.
+# 3. Verificar checksums raw, esquema de la instantánea, conteos y ambos hashes.
 uv run ecuador-data verify
 ```
 
-`build` is offline. Two runs from the same raw cache print the same
-`logical_sha256`; CI compares it with the manifest and rebuilds the mini
-fixtures.
+`build` funciona sin conexión. Dos ejecuciones desde la misma caché raw imprimen el mismo
+`logical_sha256`; el CI lo compara con el manifiesto y reconstruye los fixtures mini.
 
-### Mini subset
+### Subconjunto mini
 
-`pipeline/catalog/mini.toml` selects six indicators and five geographies. It
-feeds the Rust contract fixture and the in-memory adapter fixture:
+`pipeline/catalog/mini.toml` selecciona seis indicadores y cinco geografías. Alimenta el
+fixture de contrato de Rust y el fixture del adaptador en memoria:
 
 ```bash
 cd pipeline
@@ -110,12 +110,12 @@ uv run ecuador-data build --subset mini --out ../crates/indicators-core/tests/fi
 uv run ecuador-data export-json --subset mini --out ../src/adapters/memory/fixtures/mini.snapshot.json
 ```
 
-`export-json` runs the same deterministic build in a temporary directory and
-writes canonical JSON:
+`export-json` ejecuta el mismo build determinista en un directorio temporal y escribe JSON
+canónico:
 `{"schema_version":1,"meta":{...},"topics":[...],"geographies":[...],"indicators":[...],"observations":[[code,iso3,year,value],...]}`
-with tables sorted by primary key. The command is byte-reproducible.
+con las tablas ordenadas por clave primaria. El comando es reproducible byte a byte.
 
-### Lakehouse import (optional)
+### Importación desde lakehouse (opcional)
 
 ```bash
 cd pipeline
@@ -123,11 +123,11 @@ uv sync --extra lakehouse
 uv run ecuador-data import-lakehouse --manifest ../sibling/manifest.json --out ../data/from-lakehouse.sqlite
 ```
 
-The DuckDB file is opened read-only and is never linked into the desktop
-runtime. The contract, example and error table are in
+El archivo DuckDB se abre en modo solo lectura y nunca se enlaza en el runtime de
+escritorio. El contrato, el ejemplo y la tabla de errores están en
 [`LAKEHOUSE-MANIFEST.md`](LAKEHOUSE-MANIFEST.md).
 
-## Inspecting a snapshot
+## Inspeccionar una instantánea
 
 ```bash
 sqlite3 data/snapshot/ecuador-indicators.snapshot.sqlite \
@@ -137,38 +137,38 @@ sqlite3 data/snapshot/ecuador-indicators.snapshot.sqlite \
 jq '.snapshot.counts' data/MANIFEST.json
 ```
 
-## Checksums policy
+## Política de checksums
 
-- `data/MANIFEST.json` is the authority for the raw cache and the bundled
-  snapshot. A refresh regenerates it; review the diff before committing.
-- Raw files are never edited; a changed file is either re-fetched or the
-  manifest is wrong. `verify` names the file and the expected/actual values.
-- The desktop self-check compares the bundled snapshot bytes with the bundled
-  manifest. The logical hash is not recomputed in Rust.
-- Release installers are published with `SHA256SUMS.txt` and a build-provenance
-  attestation; see `docs/INSTALL.md` (release task).
+- `data/MANIFEST.json` es la autoridad para la caché raw y la instantánea incluida. Una
+  actualización lo regenera; revisa el diff antes de versionarlo.
+- Los archivos raw nunca se editan: si un archivo cambia, o se vuelve a obtener o el
+  manifiesto está mal. `verify` indica el archivo y los valores esperado y real.
+- El self-check del escritorio compara los bytes de la instantánea incluida con el manifiesto
+  incluido. El hash lógico no se recalcula en Rust.
+- Los instaladores de release se publican con `SHA256SUMS.txt` y una atestación de
+  procedencia del build; consulta `docs/INSTALL.md` (tarea de release).
 
-## Limitations
+## Limitaciones
 
-- **Annual data only.** WDI series are annual; the application does not bundle
-  monthly or quarterly series.
-- **Reporting lags.** Different series end in different years (for example
-  maternal mortality through 2023, literacy through 2024, GDP through 2025).
-  Missing values are gaps, never zero.
-- **Estimates and models.** Several indicators are modelled estimates (ILO
-  labour series, WHO/UN mortality and health series, UN population projections,
-  World Bank poverty estimates). They are not raw survey counts.
-- **No official statistics claim.** The app republishes WDI and says so; it is
-  not an official BCE or INEC product.
-- **BCE and INEC are not bundled.** BCE states no licence for statistical data,
-  and INEC's CC BY 4.0 footer does not clearly cover the linked datasets; both
-  lack a verified stable machine-readable endpoint. They are candidates for a
-  future `IndicatorSource` adapter only after written clearance.
-- **Aggregates.** LCN and WLD are World Bank aggregates, not countries. Their
-  poverty and Gini series are absent where the World Bank does not publish
-  aggregate values.
-- **Spanish metadata** comes from the World Bank's Spanish API; derived values
-  are computed by the application and are not official World Bank calculations.
-- **Verbatim names.** The API returns some geography names with trailing
-  whitespace (for example `LCN`). The raw cache and snapshot keep them
-  unchanged so checksums stay reproducible; the UI trims them for display.
+- **Solo datos anuales.** Las series de WDI son anuales; la aplicación no incluye series
+  mensuales ni trimestrales.
+- **Rezagos de reporte.** Distintas series terminan en distintos años (por ejemplo, la
+  mortalidad materna llega hasta 2023, la alfabetización hasta 2024 y el PIB hasta 2025). Los
+  valores faltantes son huecos, nunca cero.
+- **Estimaciones y modelos.** Varios indicadores son estimaciones modeladas (series laborales
+  de la OIT, series de mortalidad y salud de la OMS y la ONU, proyecciones de población de la
+  ONU, estimaciones de pobreza del Banco Mundial). No son conteos de encuestas en bruto.
+- **Sin afirmación de estadística oficial.** La aplicación vuelve a publicar WDI y lo indica;
+  no es un producto oficial del BCE ni del INEC.
+- **BCE e INEC no están incluidos.** El BCE no declara una licencia para sus datos
+  estadísticos, y el pie con CC BY 4.0 del INEC no cubre con claridad los conjuntos de datos
+  enlazados; ninguno de los dos tiene un endpoint estable y verificado legible por máquina.
+  Solo podrían ser candidatos para un futuro adaptador de `IndicatorSource` después de una
+  autorización por escrito.
+- **Agregados.** LCN y WLD son agregados del Banco Mundial, no países. Sus series de pobreza
+  y de Gini no existen donde el Banco Mundial no publica valores agregados.
+- **Metadatos en español** provienen de la API en español del Banco Mundial; los valores
+  derivados los calcula la aplicación y no son cálculos oficiales del Banco Mundial.
+- **Nombres sin modificar.** La API devuelve algunos nombres de geografía con espacios al
+  final (por ejemplo, `LCN`). La caché raw y la instantánea los conservan tal cual para que los
+  checksums sigan siendo reproducibles; la UI los recorta al mostrarlos.
