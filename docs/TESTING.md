@@ -19,19 +19,19 @@ que usa el repositorio. Es el complemento legible para personas del workflow de 
 ## Comandos
 
 ```bash
-# Ciclo rápido de TypeScript
+# Fast TypeScript loop
 npm run test
-npm run test:cov          # aplica los umbrales de cobertura
+npm run test:cov          # enforces the coverage thresholds
 npm run typecheck
 npm run lint
 
-# Todo lo que ejecuta la puerta de CI en local
+# Everything the CI gate runs locally
 npm run verify
 
-# Valores medidos usados por la tabla de Calidad del README
+# Measured values used by the README Quality table
 npm run metrics
 
-# End-to-end en navegador (construye el bundle e2e e inicia el preview de Vite)
+# Browser end-to-end (builds the e2e bundle and starts Vite preview)
 npx playwright install chromium webkit
 npm run test:e2e
 npx playwright test --project=chromium

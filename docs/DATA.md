@@ -10,7 +10,7 @@ oficial de estadísticas y no pretende serlo.
 |---|---|
 | Fuente | Banco Mundial, World Development Indicators (WDI), source id 2 |
 | API | `https://api.worldbank.org/v2` (sin clave) |
-| Página del dataset | <https://datacatalog.worldbank.org/search/dataset/0037712/world-development-indicators> |
+| Página del conjunto de datos | <https://datacatalog.worldbank.org/search/dataset/0037712/world-development-indicators> |
 | Licencia | CC BY 4.0, <https://creativecommons.org/licenses/by/4.0/> |
 | Términos | <https://datacatalog.worldbank.org/public-licenses> |
 | Obtención | `path` / `url` / `sha256` por archivo en `data/MANIFEST.json` |
@@ -35,7 +35,7 @@ versión 1 (`PRAGMA user_version = 1`). El DDL exacto está en
 
 | Tabla | Contenido |
 |---|---|
-| `meta` | Procedencia: esquema, dataset, origen, fuente, fecha de obtención, licencia, atribución, versión del pipeline, hash lógico |
+| `meta` | Procedencia: esquema, conjunto de datos, origen, fuente, fecha de obtención, licencia, atribución, versión del pipeline, hash lógico |
 | `topic` | 8 temas seleccionados, con nombres en inglés y español, y orden de presentación |
 | `geography` | 7 geografías con códigos ISO, nombres bilingües y marca de agregado |
 | `indicator` | 38 indicadores con nombres y descripciones bilingües, organizaciones de origen, etiquetas de unidad, `value_kind`, decimales, `higher_is`, tema y orden |
@@ -65,17 +65,17 @@ Claves obligatorias de `meta`: `schema_version`, `dataset_id`, `dataset_version`
 
 ```mermaid
 flowchart LR
-  WB[("API v2 del Banco Mundial, WDI, CC BY 4.0")] -->|"refresh (red)"| Raw["data/raw/worldbank/*.json + SHA-256 en MANIFEST.json"]
-  Raw -->|"build (sin conexión, determinista)"| Snap[("ecuador-indicators.snapshot.sqlite, schema v1")]
-  LH[("lakehouse .duckdb + manifiesto v1, opcional")] -->|"import-lakehouse"| Snap2[("snapshot.sqlite personalizada")]
-  Snap -->|"recurso de Tauri"| App["App de escritorio, solo lectura"]
-  Snap2 -->|"Ajustes > Abrir instantánea"| App
-  Snap -->|"export-json mini o full"| Fx["fixtures JSON para el adaptador en memoria"]
-  Raw -->|"verify"| Chk{"checksums + hash lógico"}
+  WB[("World Bank API v2, WDI, CC BY 4.0")] -->|"refresh (network)"| Raw["data/raw/worldbank/*.json + MANIFEST.json sha256"]
+  Raw -->|"build (offline, deterministic)"| Snap[("ecuador-indicators.snapshot.sqlite, schema v1")]
+  LH[("lakehouse .duckdb + manifest v1, optional")] -->|"import-lakehouse"| Snap2[("custom snapshot.sqlite")]
+  Snap -->|"Tauri resource"| App["Desktop app, read-only"]
+  Snap2 -->|"Settings > Open snapshot"| App
+  Snap -->|"export-json mini or full"| Fx["JSON fixtures for the memory adapter"]
+  Raw -->|"verify"| Chk{"checksums + logical hash"}
   Snap -->|"verify"| Chk
 ```
 
-## Reproducir el dataset
+## Reproducir el conjunto de datos
 
 Requisitos: Python 3.12 y uv (el pipeline los fija en `pipeline/pyproject.toml` y en
 `.python-version`). Ejecuta los comandos desde `pipeline/`, salvo que un comando indique
@@ -86,13 +86,13 @@ lo contrario. El directorio de datos por defecto es `data/` del repositorio; cá
 cd pipeline
 uv sync --frozen
 
-# 1. Obtener metadatos en inglés y español, además de las observaciones (red).
+# 1. Fetch metadata in English and Spanish plus observations (network).
 uv run ecuador-data refresh
 
-# 2. Construir la instantánea determinista y actualizar data/MANIFEST.json.
+# 2. Build the deterministic snapshot and update data/MANIFEST.json.
 uv run ecuador-data build
 
-# 3. Verificar checksums raw, esquema de la instantánea, conteos y ambos hashes.
+# 3. Check raw checksums, snapshot schema, counts and both hashes.
 uv run ecuador-data verify
 ```
 

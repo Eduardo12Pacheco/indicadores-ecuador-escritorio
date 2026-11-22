@@ -39,7 +39,7 @@ Puntos clave:
   se acepta ningún mapeo adicional. Así los fallos quedan explícitos en lugar de descartar
   datos en silencio.
 - La instantánea copia los textos de licencia y atribución del manifiesto y registra
-  `origin = "lakehouse"`. Los demás campos de procedencia usan los metadatos del dataset del
+  `origin = "lakehouse"`. Los demás campos de procedencia usan los metadatos del conjunto de datos del
   manifiesto (`title`, `version`, `generated_at`).
 - Los fallos de validación terminan con código `2` a través de la CLI y señalan la relación o
   columna infractora. La falta de `duckdb` en el entorno también se informa como un error

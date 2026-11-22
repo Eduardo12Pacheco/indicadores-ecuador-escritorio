@@ -10,50 +10,50 @@ escritorio importa el pipeline.
 
 ```mermaid
 flowchart LR
-  subgraph UI["UI de React 19<br/>src/ui + src/app"]
-    Pages["Explorar, Comparar, Vistas, Ajustes, Acerca de"]
-    Palette["Paleta de comandos y atajos"]
-    Charts["Puerto ChartRenderer"]
+  subgraph UI["React 19 UI<br/>src/ui + src/app"]
+    Pages["Explore, Compare, Views, Settings, About"]
+    Palette["Command palette and shortcuts"]
+    Charts["ChartRenderer port"]
   end
-  subgraph Core["Núcleo TypeScript<br/>src/core"]
-    UC["Casos de uso de aplicación"]
-    Domain["Dominio: transformaciones, estadísticas, búsqueda, CSV, vistas"]
-    Ports["Puertos: dataset, vistas, ajustes, exportación, actualizaciones"]
+  subgraph Core["TypeScript core<br/>src/core"]
+    UC["Application use cases"]
+    Domain["Domain: transforms, stats, search, CSV, views"]
+    Ports["Ports: dataset, views, settings, export, updates"]
   end
-  subgraph Adapters["Adaptadores TypeScript<br/>src/adapters"]
-    Tauri["Gateway de Tauri + zod"]
-    Memory["Gateway en memoria (dev, E2E, media)"]
-    ECharts["Renderizador de ECharts"]
+  subgraph Adapters["TypeScript adapters<br/>src/adapters"]
+    Tauri["Tauri gateway + zod"]
+    Memory["In-memory gateway (dev, E2E, media)"]
+    ECharts["ECharts renderer"]
   end
-  subgraph Shell["Shell Rust<br/>src-tauri"]
-    Commands["14 comandos IPC async"]
-    State["AppState: servicios + dataset con RwLock"]
+  subgraph Shell["Rust shell<br/>src-tauri"]
+    Commands["14 async IPC commands"]
+    State["AppState: services + RwLock dataset"]
   end
   subgraph RustCore["crates/indicators-core"]
-    Services["Dataset, Vista, Ajustes, Exportación, Actualización"]
-    RustPorts["Instantánea, tienda de usuario, exportación, feed de releases"]
+    Services["Dataset, View, Settings, Export, Update"]
+    RustPorts["Snapshot, user store, export, release feed"]
     RustAdapters["rusqlite, fs, ureq"]
   end
-  subgraph Pipeline["Pipeline Python<br/>pipeline/"]
-    DataCore["Dominio y casos de uso de ecuador_data"]
-    DataAdapters["API del Banco Mundial, caché raw, SQLite, DuckDB"]
+  subgraph Pipeline["Python pipeline<br/>pipeline/"]
+    DataCore["ecuador_data domain + use cases"]
+    DataAdapters["World Bank API, raw cache, SQLite, DuckDB"]
   end
   Pages --> UC
   Palette --> UC
   Pages --> Charts
   UC --> Domain
   UC --> Ports
-  Tauri -. implementa .-> Ports
-  Memory -. implementa .-> Ports
-  ECharts -. implementa .-> Charts
+  Tauri -. implements .-> Ports
+  Memory -. implements .-> Ports
+  ECharts -. implements .-> Charts
   Tauri -->|invoke| Commands
   Commands --> State
   State --> Services
   Services --> RustPorts
-  RustAdapters -. implementa .-> RustPorts
+  RustAdapters -. implements .-> RustPorts
   Pipeline -->|"refresh + build"| Snapshot[("data/snapshot/*.sqlite")]
-  RustAdapters -->|"solo lectura"| Snapshot
-  Memory -->|"fixture JSON mini"| Snapshot
+  RustAdapters -->|"read-only"| Snapshot
+  Memory -->|"mini JSON fixture"| Snapshot
 ```
 
 La UI nunca habla con SQLite. El núcleo de Rust nunca importa Tauri. El dominio de
@@ -137,24 +137,24 @@ Las definiciones de los puertos están en `src/core/application/ports.ts`,
 ```mermaid
 sequenceDiagram
   autonumber
-  participant UI as Página Explorar
-  participant UC as Caso de uso Explorar (TS)
-  participant GW as DatasetRepository (gateway de Tauri)
-  participant CMD as comando dataset_observations
+  participant UI as Explore page
+  participant UC as Explore use case (TS)
+  participant GW as DatasetRepository (Tauri gateway)
+  participant CMD as dataset_observations command
   participant SVC as DatasetService (Rust)
-  participant DB as Instantánea SQLite (solo lectura)
-  UI->>UC: código de indicador + lista ISO3 + rango
+  participant DB as SQLite snapshot (read-only)
+  UI->>UC: indicator code + ISO3 list + range
   UC->>GW: getCatalog() / getObservations(codes, iso3s)
-  GW->>GW: validar con zod, mapear a tipos de dominio
-  GW->>CMD: invoke con argumentos en snake_case
+  GW->>GW: validate with zod, map to domain types
+  GW->>CMD: invoke with snake_case arguments
   CMD->>SVC: spawn_blocking(dataset.observations(...))
   SVC->>DB: SELECT ... WHERE indicator_code IN ... AND iso3 IN ...
-  DB-->>SVC: filas
+  DB-->>SVC: rows
   SVC-->>CMD: Vec<Observation>
   CMD-->>GW: JSON (Result<T, ErrorDto>)
-  GW-->>UC: Observation[] o AppError
-  UC-->>UI: modelo de Explorar (series, KPI, rango)
-  UI->>UI: construir la opción pura del gráfico, renderizar el canvas, actualizar la región en vivo
+  GW-->>UC: Observation[] or AppError
+  UC-->>UI: explore model (series, KPIs, range)
+  UI->>UI: build pure chart option, render canvas, update live region
 ```
 
 El hash de la URL es la fuente de verdad de lo que ve la persona usuaria. Las claves
@@ -172,8 +172,8 @@ TypeScript la replica para dar retroalimentación rápida.
 
 | Código | Significado | Recuperación habitual |
 |---|---|---|
-| `SNAPSHOT_INVALID` | El archivo SQLite seleccionado no es una instantánea schema-v1 válida. | Conservar el dataset anterior; ofrecer restablecer la instantánea incluida. |
-| `SNAPSHOT_NOT_FOUND` | La ruta configurada de la instantánea no existe. | Pantalla de problema del dataset con restablecimiento. |
+| `SNAPSHOT_INVALID` | El archivo SQLite seleccionado no es una instantánea schema-v1 válida. | Conservar el conjunto de datos anterior; ofrecer restablecer la instantánea incluida. |
+| `SNAPSHOT_NOT_FOUND` | La ruta configurada de la instantánea no existe. | Pantalla de problema del conjunto de datos con restablecimiento. |
 | `VIEW_NOT_FOUND` | El id de la vista guardada ya no existe. | Actualizar la lista. |
 | `VIEW_INVALID` | El nombre o la especificación de la vista incumplen el modelo. | Validación en línea en el diálogo de guardado. |
 | `LIMIT_EXCEEDED` | Se alcanzó el límite de 200 vistas. | Eliminar una vista antigua. |
@@ -194,7 +194,7 @@ error inesperado, `2` fallo de integridad o de validación (`IntegrityError`,
 - `AppState` contiene un `RwLock<Arc<DatasetService>>`; el servicio de dataset
   intercambia su `SnapshotReader` activo bajo su propio lock. Una apertura fallida deja
   intactos tanto el lector como el `Arc`, así que una instantánea personalizada inválida
-  nunca reemplaza un dataset que funciona.
+  nunca reemplaza un conjunto de datos que funciona.
 - Cada comando de Tauri es `async` y delega el trabajo bloqueante de SQLite y del sistema
   de archivos a `tauri::async_runtime::spawn_blocking`; el hilo del webview nunca espera
   por E/S.
@@ -236,11 +236,11 @@ Los mismos valores aparecen en `docs/INSTALL.md` (rutas del escritorio) y en
 
 ```mermaid
 flowchart LR
-  WB[("API v2 del Banco Mundial<br/>WDI, CC BY 4.0")] -->|refresh| Raw["data/raw/worldbank/**<br/>JSON canónico + MANIFEST.json"]
-  Raw -->|build, sin conexión| Snap[("instantánea schema-v1<br/>logical_sha256")]
-  LH[("DuckDB + manifiesto v1<br/>opcional")] -->|import-lakehouse| Snap2[("instantánea personalizada")]
-  Snap -->|export-json mini/full| Fx["fixtures JSON"]
-  Raw -->|verify| Chk{"checksums + hash lógico"}
+  WB[("World Bank API v2<br/>WDI, CC BY 4.0")] -->|refresh| Raw["data/raw/worldbank/**<br/>canonical JSON + MANIFEST.json"]
+  Raw -->|build, offline| Snap[("schema-v1 snapshot<br/>logical_sha256")]
+  LH[("DuckDB + manifest v1<br/>optional")] -->|import-lakehouse| Snap2[("custom snapshot")]
+  Snap -->|export-json mini/full| Fx["JSON fixtures"]
+  Raw -->|verify| Chk{"checksums + logical hash"}
   Snap -->|verify| Chk
 ```
 

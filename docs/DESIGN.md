@@ -169,7 +169,7 @@ Los números, porcentajes y fechas usan `Intl` con `en-US` o `es-EC`.
 | Carga | Tarjetas esqueleto y marcadores de gráfico, nunca un destello en blanco; un anuncio discreto de ocupado por región. |
 | Vacío | Explica por qué la selección no tiene datos y ofrece una acción de recuperación (por ejemplo, "Ocultar Mundo" o un enlace de vuelta a Explorar). |
 | Error | Mensaje en lenguaje claro, una acción de Reintentar cuando la solicitud puede repetirse, y un desplegable de detalles con el mensaje técnico. |
-| Problema del dataset | Pantalla completa de recuperación para una instantánea inválida o ausente, con "Restablecer a la instantánea incluida"; los detalles técnicos quedan en un desplegable. |
+| Problema del conjunto de datos | Pantalla completa de recuperación para una instantánea inválida o ausente, con "Restablecer a la instantánea incluida"; los detalles técnicos quedan en un desplegable. |
 | Primer uso | Vistas guardadas explica qué es una vista y enlaza a Explorar en lugar de mostrar una cuadrícula vacía. |
 | Éxito | Los toasts anuncian el resultado ("Guardado en …", "Descarga iniciada") en una región discreta y se pausan con hover o foco. |
 | Destructivo | Eliminar pide confirmación en un diálogo con foco, nombra la vista y devuelve el foco al cancelar. |

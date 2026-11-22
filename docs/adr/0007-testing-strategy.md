@@ -59,7 +59,7 @@ rutas de recuperación de S12. El E2E nativo es una capa separada (T12).
   WKWebView, según se documenta en <https://v2.tauri.app/develop/tests/webdriver/> y
   se verificó el 2026-11-19.
 - El adaptador en memoria necesita las claves `e2e:fault` documentadas para simular
-  fallas de dataset, catálogo, observación e instantánea. Esas claves son ganchos de
+  fallas del conjunto de datos, catálogo, observación e instantánea. Esas claves son ganchos de
   prueba, no configuración visible para el usuario.
 
 ## Alternativas
