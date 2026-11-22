@@ -1,45 +1,45 @@
-# Releasing
+# Publicación
 
-The release is tag-driven and fully automated by
-[`.github/workflows/release.yml`](../.github/workflows/release.yml). There is no
-manual upload step and no release branch. This page records the procedure the
-maintainer follows and the checklist used to accept a release.
+La release se dispara con tags y la automatiza por completo
+[`.github/workflows/release.yml`](../.github/workflows/release.yml). No hay un paso de
+carga manual ni una rama de release. Esta página registra el procedimiento que sigue la
+persona mantenedora y la lista de verificación usada para aceptar una release.
 
-## How the workflow works
+## Cómo funciona el workflow
 
-| Job | Runner | What it does |
+| Job | Runner | Qué hace |
 |---|---|---|
-| `verify` | `ubuntu-latest` | checks that `package.json`, `Cargo.toml`, `src-tauri/tauri.conf.json` and `pipeline/pyproject.toml` share one version and, on a tag, that the tag matches it |
-| `build` | matrix | builds Linux x64 on `ubuntu-22.04`, Windows x64 on `windows-latest`, macOS arm64 and x64 on `macos-latest`; collects the installers with `scripts/collect-artifacts.mjs` |
-| `smoke-linux` | `ubuntu-22.04` | installs the `.deb`, runs `--self-check` under xvfb, asserts the report, then runs the AppImage |
-| `smoke-windows` | `windows-latest` | installs the NSIS package with `/S`, locates the executable, runs `--self-check`, extracts the MSI administratively and repeats |
-| `smoke-macos-arm64` | `macos-latest` | mounts the arm64 `.dmg`, runs the app's `--self-check`, detaches |
-| `smoke-macos-x64` | `macos-15-intel` | same for the Intel `.dmg` |
-| `publish` | `ubuntu-latest` | only on `v*` tags: downloads every installer, writes `SHA256SUMS.txt`, generates notes with git-cliff, attests provenance and creates the GitHub Release |
+| `verify` | `ubuntu-latest` | comprueba que `package.json`, `Cargo.toml`, `src-tauri/tauri.conf.json` y `pipeline/pyproject.toml` comparten una sola versión y, en un tag, que el tag coincide con ella |
+| `build` | matriz | compila Linux x64 en `ubuntu-22.04`, Windows x64 en `windows-latest` y macOS arm64 y x64 en `macos-latest`; recolecta los instaladores con `scripts/collect-artifacts.mjs` |
+| `smoke-linux` | `ubuntu-22.04` | instala el `.deb`, ejecuta `--self-check` bajo xvfb, verifica el informe y luego ejecuta el AppImage |
+| `smoke-windows` | `windows-latest` | instala el paquete NSIS con `/S`, localiza el ejecutable, ejecuta `--self-check`, extrae el MSI de forma administrativa y repite la prueba |
+| `smoke-macos-arm64` | `macos-latest` | monta el `.dmg` arm64, ejecuta `--self-check` de la app y lo desmonta |
+| `smoke-macos-x64` | `macos-15-intel` | igual, para el `.dmg` de Intel |
+| `publish` | `ubuntu-latest` | solo en tags `v*`: descarga todos los instaladores, escribe `SHA256SUMS.txt`, genera las notas con git-cliff, atestigua la procedencia y crea la release de GitHub |
 
-A manual dispatch (`workflow_dispatch`) builds and smoke-tests every installer
-but skips `publish` because the publish job requires a tag ref. The `dry_run`
-input defaults to `true` and documents that intent.
+Un dispatch manual (`workflow_dispatch`) compila y prueba con humo todos los instaladores,
+pero omite `publish` porque ese job requiere una referencia de tag. El input `dry_run` tiene
+por defecto el valor `true` y documenta esa intención.
 
-## Prepare a release
+## Preparar una release
 
-1. Make sure `main` is green and every change is merged.
-2. Bump the four manifests atomically and verify them:
+1. Verifica que `main` esté en verde y que todos los cambios estén integrados.
+2. Sube de versión los cuatro manifiestos de forma atómica y verifícalos:
 
    ```bash
    node scripts/bump-version.mjs 0.2.0
    node scripts/bump-version.mjs --check
    ```
 
-3. Regenerate the changelog from Conventional Commits (the tag is only used as
-   the section heading; do not create it yet):
+3. Regenera el changelog a partir de Conventional Commits (el tag solo se usa como
+   encabezado de sección; todavía no lo crees):
 
    ```bash
    npx --yes git-cliff@2.14.2 --config cliff.toml --tag v0.2.0 -o CHANGELOG.md
    ```
 
-4. Review `CHANGELOG.md`, commit the version bump and changelog together, and
-   push:
+4. Revisa `CHANGELOG.md`, confirma juntos la subida de versión y el changelog, y envía los
+   cambios:
 
    ```bash
    git add package.json Cargo.toml src-tauri/tauri.conf.json pipeline/pyproject.toml CHANGELOG.md
@@ -47,7 +47,7 @@ input defaults to `true` and documents that intent.
    git push origin main
    ```
 
-5. Run the dry run before tagging:
+5. Ejecuta el dry run antes de etiquetar:
 
    ```bash
    gh workflow run release.yml -f dry_run=true
@@ -55,25 +55,24 @@ input defaults to `true` and documents that intent.
    gh run watch <run-id> --exit-status
    ```
 
-6. When the dry run is green and the owner approves the version, create the
-   tag and push it:
+6. Cuando el dry run esté en verde y la persona propietaria apruebe la versión, crea el tag
+   y envíalo:
 
    ```bash
    git tag v0.2.0
    git push origin v0.2.0
    ```
 
-The tag push starts the same workflow; this time `publish` creates the release.
-A tag with a `-` suffix, for example `v0.2.0-rc.1`, is published as a
-prerelease.
+El envío del tag inicia el mismo workflow; esta vez `publish` crea la release. Un tag con
+sufijo `-`, por ejemplo `v0.2.0-rc.1`, se publica como prerelease.
 
-## Verify the published release
+## Verificar la release publicada
 
-- The `verify` job printed `versions in sync: 0.2.0`.
-- All four build jobs and all four smoke jobs succeeded; a failed smoke test
-  means the installer is not published.
-- The release contains exactly these assets (plus `SHA256SUMS.txt` and the
-  generated notes in the release body):
+- El job `verify` imprimió `versions in sync: 0.2.0`.
+- Los cuatro jobs de build y los cuatro de humo tuvieron éxito; una prueba de humo fallida
+  significa que el instalador no se publica.
+- La release contiene exactamente estos assets (además de `SHA256SUMS.txt` y de las notas
+  generadas en el cuerpo de la release):
 
   ```text
   ecuador-indicators_0.2.0_linux_x64.deb
@@ -86,28 +85,28 @@ prerelease.
   SHA256SUMS.txt
   ```
 
-- `SHA256SUMS.txt` lists every installer and verifies locally:
+- `SHA256SUMS.txt` lista cada instalador y se verifica localmente:
 
   ```bash
   sha256sum -c SHA256SUMS.txt
   ```
 
-- Provenance verifies:
+- La procedencia se verifica:
 
   ```bash
   gh attestation verify ecuador-indicators_0.2.0_linux_x64.deb \
     --repo Eduardo12Pacheco/indicadores-ecuador-escritorio
   ```
 
-- The release notes have Features, Bug Fixes, Documentation, Tests and
-  Maintenance sections as applicable; `??` or empty groups are a sign the
-  commit history violated the Conventional Commits convention.
-- Download one installer on each OS and follow
-  [`INSTALL.md`](INSTALL.md); the unsigned-build warnings must match that guide.
+- Las notas de la release tienen las secciones Features, Bug Fixes, Documentation, Tests y
+  Maintenance según corresponda (son los nombres que genera git-cliff). Los `??` o los grupos
+  vacíos indican que el historial de commits incumplió la convención de Conventional Commits.
+- Descarga un instalador en cada sistema operativo y sigue [`INSTALL.md`](INSTALL.md); las
+  advertencias del build sin firma deben coincidir con esa guía.
 
-## Rollback
+## Revertir
 
-If a release is wrong, unpublish it before users install it:
+Si una release está mal, desepublícala antes de que las personas la instalen:
 
 ```bash
 gh release delete v0.2.0 --yes
@@ -115,24 +114,25 @@ git push origin :refs/tags/v0.2.0
 git tag -d v0.2.0
 ```
 
-Fix the problem on `main`, bump to a new patch version and repeat the
-procedure. Do not delete a release that users may already have installed
-without publishing a replacement; the app has no auto-updater, so users only
-learn about a fix through the opt-in notify-only check or the release page.
+Corrige el problema en `main`, sube a una nueva versión de parche y repite el procedimiento.
+No borres una release que las personas usuarias puedan haber instalado sin publicar un
+reemplazo; la app no tiene actualizador automático, así que las personas solo se enteran de
+una corrección mediante la comprobación opcional de solo notificación o la página de
+releases.
 
-## Why there is no auto-updater
+## Por qué no hay actualizador automático
 
-`tauri-plugin-updater` requires an update-signing key pair and a hosted
-`latest.json` contract. Key custody and secrets conflict with the project's
-"zero mandatory keys" constraint, and the installers are unsigned anyway
-(ADR 0008). The app instead performs an **opt-in, notify-only** version check
-against the GitHub releases API and links to the release page; it never
-downloads or installs an update. Enabling the check is a single setting and is
-off by default.
+`tauri-plugin-updater` requiere un par de claves de firma de actualizaciones y un contrato
+`latest.json` alojado. La custodia de claves y los secretos chocan con la restricción del
+proyecto de "cero claves obligatorias", y los instaladores no están firmados de todos modos
+(ADR 0008). En su lugar, la app realiza una comprobación de versión **opcional y solo de
+notificación** contra la API de releases de GitHub y enlaza a la página de la release; nunca
+descarga ni instala una actualización. Activar la comprobación es un solo ajuste y está
+desactivada por defecto.
 
-## Local release checks
+## Verificaciones locales de la release
 
-Before tagging, the same gates can be reproduced locally:
+Antes de etiquetar, los mismos controles pueden reproducirse localmente:
 
 ```bash
 npm run verify
@@ -142,6 +142,6 @@ node scripts/collect-artifacts.mjs \
 npx --yes git-cliff@2.14.2 --config cliff.toml --unreleased --strip header
 ```
 
-`npx tauri build --bundles deb` produces the Debian package locally; RPM and
-AppImage builds may need additional host tools, which is why the workflow builds
-them on the native Linux runner.
+`npx tauri build --bundles deb` produce localmente el paquete Debian; los builds de RPM y
+AppImage pueden necesitar herramientas adicionales del host, por eso el workflow los compila
+en el runner nativo de Linux.
