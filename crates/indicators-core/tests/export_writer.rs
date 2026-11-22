@@ -52,20 +52,13 @@ fn rejects_a_path_without_a_file_name() {
 
 #[test]
 fn surfaces_io_failures_as_storage_errors() {
+    // A directory at the destination makes the final rename fail on every platform.
+    // Unix mode bits do not restrict a directory on Windows, so they cannot be used here.
     let directory = tempfile::tempdir().unwrap();
-    let read_only = directory.path().join("read-only");
-    fs::create_dir(&read_only).unwrap();
-    let mut permissions = fs::metadata(&read_only).unwrap().permissions();
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        permissions.set_mode(0o500);
-    }
-    fs::set_permissions(&read_only, permissions).unwrap();
+    let destination = directory.path().join("export.csv");
+    fs::create_dir(&destination).unwrap();
 
-    let error = FsExportWriter
-        .write(&read_only.join("export.csv"), b"x")
-        .unwrap_err();
+    let error = FsExportWriter.write(&destination, b"x").unwrap_err();
 
     assert_eq!(error.code(), "STORAGE");
 }
