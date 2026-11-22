@@ -8,7 +8,7 @@ const README_ES = join(ROOT, "README.md");
 const README_EN = join(ROOT, "README.en.md");
 const ARCHITECTURE = join(ROOT, "docs", "ARCHITECTURE.md");
 
-const ADR_SECTIONS = ["## Status", "## Context", "## Decision", "## Consequences"];
+const ADR_SECTIONS = ["## Estado", "## Contexto", "## Decisión", "## Consecuencias"];
 const MARKDOWN_LINK = /!?\[[^\]]*\]\(([^)]+)\)/g;
 const EXTERNAL_SCHEME = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
@@ -105,10 +105,12 @@ describe("documentation", () => {
       join(ROOT, "SECURITY.md"),
       ...docsFiles(),
     ];
-    const markers = /(?:TODO|TBD|FIXME|lorem)/i;
+    // Uppercase whole-word markers: a case-insensitive substring match would
+    // flag the Spanish word "todo" (and "todos") as an unfinished marker.
+    const markers = [/\b(?:TODO|TBD|FIXME)\b/, /\blorem\b/i];
     const unfinished = files
       .filter((file) => existsSync(file))
-      .filter((file) => markers.test(stripCodeFences(read(file))))
+      .filter((file) => markers.some((marker) => marker.test(stripCodeFences(read(file)))))
       .map((file) => relative(ROOT, file));
     expect(unfinished).toEqual([]);
   });

@@ -1,71 +1,74 @@
-# ADR 0009: Lakehouse manifest v1 contract
+# ADR 0009: Contrato del manifiesto lakehouse v1
 
-## Status
+## Estado
 
-Accepted. The contract is proposed by this repository: no sibling lakehouse
-artifact existed to align with when it was written.
+Aceptada. El contrato lo propone este repositorio: cuando se escribió no existía
+ningún artefacto lakehouse hermano con el que alinearse.
 
-## Context
+## Contexto
 
-The optional lakehouse integration must let a sibling project export data from
-DuckDB into an Ecuador Indicators snapshot without linking DuckDB into the
-desktop runtime. The desktop ships on three operating systems, and a native
-DuckDB build would add packaging, size and maintenance cost for an optional
-feature. The integration also needs a stable, documented, versioned boundary
-rather than ad-hoc SQL knowledge of a sibling repository.
+La integración lakehouse opcional debe permitir que un proyecto hermano exporte datos
+desde DuckDB hacia una instantánea de Ecuador Indicators sin enlazar DuckDB en el
+runtime de escritorio. La aplicación se distribuye en tres sistemas operativos, y un
+build nativo de DuckDB agregaría costo de empaquetado, tamaño y mantenimiento para una
+función opcional. La integración también necesita una frontera estable, documentada y
+versionada, en lugar de conocimiento SQL ad hoc de un repositorio hermano.
 
-## Decision
+## Decisión
 
-Define a JSON manifest, version `1.x`, that describes a DuckDB file and maps its
-relations and columns onto the five schema-v1 snapshot tables. The full contract
-is in [`docs/LAKEHOUSE-MANIFEST.md`](../LAKEHOUSE-MANIFEST.md) and is encoded in
+Definir un manifiesto JSON, versión `1.x`, que describe un archivo DuckDB y mapea sus
+relaciones y columnas a las cinco tablas de la instantánea schema-v1. El contrato
+completo está en [`docs/LAKEHOUSE-MANIFEST.md`](../LAKEHOUSE-MANIFEST.md) y está
+codificado en
 [`pipeline/schemas/lakehouse-manifest.v1.schema.json`](../../pipeline/schemas/lakehouse-manifest.v1.schema.json)
 (JSON Schema draft 2020-12).
 
-Key points:
+Puntos clave:
 
-- `manifest_version` major must be `1`; a different major is rejected. The minor
-  version is informative and future minor versions may add optional fields.
-- `kind` must be `ecuador-indicators-lakehouse-export`.
-- `duckdb.path` is relative to the manifest, must not escape its directory, and
-  the file bytes must match `duckdb.sha256`.
-- Relations and column identifiers must match
-  `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$`. This is validated before
-  any SQL is built, and identifiers are quoted, so the contract has no SQL
-  injection surface. DuckDB is opened with `read_only=True`.
-- Column maps are exact: every snapshot column must be mapped, and no extra
-  mapping is accepted. This keeps failures explicit instead of silently dropping
-  data.
-- The snapshot copies the manifest's licence and attribution texts and records
-  `origin = "lakehouse"`. Other provenance fields use the manifest dataset
-  metadata (`title`, `version`, `generated_at`).
-- Validation failures exit `2` through the CLI and name the offending relation or
-  column. Missing `duckdb` in the environment is also reported as a typed error;
-  install it with `uv sync --extra lakehouse` (it is a dev dependency, so the
-  test suite always has it).
+- La versión mayor de `manifest_version` debe ser `1`; una mayor distinta se rechaza. La
+  versión menor es informativa, y futuras versiones menores pueden agregar campos
+  opcionales.
+- `kind` debe ser `ecuador-indicators-lakehouse-export`.
+- `duckdb.path` es relativo al manifiesto y no puede salir de su directorio; los bytes del
+  archivo deben coincidir con `duckdb.sha256`.
+- Los identificadores de relaciones y columnas deben coincidir con
+  `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$`. Esto se valida antes de construir
+  cualquier SQL, y los identificadores se citan, así que el contrato no tiene superficie de
+  inyección SQL. DuckDB se abre con `read_only=True`.
+- Los mapas de columnas son exactos: cada columna de la instantánea debe estar mapeada y no
+  se acepta ningún mapeo adicional. Así los fallos quedan explícitos en lugar de descartar
+  datos en silencio.
+- La instantánea copia los textos de licencia y atribución del manifiesto y registra
+  `origin = "lakehouse"`. Los demás campos de procedencia usan los metadatos del dataset del
+  manifiesto (`title`, `version`, `generated_at`).
+- Los fallos de validación terminan con código `2` a través de la CLI y señalan la relación o
+  columna infractora. La falta de `duckdb` en el entorno también se informa como un error
+  tipado; se instala con `uv sync --extra lakehouse` (es una dependencia de desarrollo, así
+  que la suite de pruebas siempre lo tiene).
 
-DuckDB remains a Python-only dependency. The desktop runtime never links it.
+DuckDB sigue siendo una dependencia exclusiva de Python. El runtime de escritorio nunca lo
+enlaza.
 
-## Consequences
+## Consecuencias
 
-- The sibling project must produce this manifest and a DuckDB file; the contract
-  is the only coupling and is versioned independently.
-- Adding a snapshot column requires a manifest minor version and a coordinated
-  change here; the schema file and the domain validation are tested against each
-  other.
-- The import validates referential integrity (indicator topics, observation
-  indicators and geographies, duplicate observation keys) before writing, so a
-  bad export cannot produce a subtly corrupt snapshot.
-- A future major version can change column names or add relations without
-  breaking version-1 producers.
+- El proyecto hermano debe producir este manifiesto y un archivo DuckDB; el contrato es el
+  único acoplamiento y se versiona de forma independiente.
+- Agregar una columna a la instantánea requiere una versión menor del manifiesto y un cambio
+  coordinado aquí; el archivo de esquema y la validación del dominio se prueban uno contra el
+  otro.
+- La importación valida la integridad referencial (temas de indicadores, indicadores y
+  geografías de las observaciones, claves de observación duplicadas) antes de escribir, así
+  que una exportación defectuosa no puede producir una instantánea sutilmente corrupta.
+- Una versión mayor futura puede cambiar nombres de columnas o agregar relaciones sin romper
+  a los productores de la versión 1.
 
-## Alternatives
+## Alternativas
 
-- **Fixed table and column names in the sibling DuckDB**: brittle and impossible
-  to version or document without coupling to schema details.
-- **Parquet or CSV exchange**: loses nested metadata and typed columns; DuckDB
-  is already the sibling's storage format.
-- **Link DuckDB into the desktop runtime**: heavier installers and native builds
-  on three operating systems for an optional path.
-- **Read arbitrary SQL from the manifest**: convenient but unsafe; the explicit
-  mapping stays declarative and validated.
+- **Nombres fijos de tablas y columnas en el DuckDB hermano**: frágil, e imposible de
+  versionar o documentar sin acoplarse a detalles del esquema.
+- **Intercambio por Parquet o CSV**: pierde metadatos anidados y columnas tipadas; DuckDB ya
+  es el formato de almacenamiento del proyecto hermano.
+- **Enlazar DuckDB en el runtime de escritorio**: instaladores más pesados y builds nativos
+  en tres sistemas operativos para una ruta opcional.
+- **Leer SQL arbitrario desde el manifiesto**: conveniente, pero inseguro; el mapeo explícito
+  se mantiene declarativo y validado.

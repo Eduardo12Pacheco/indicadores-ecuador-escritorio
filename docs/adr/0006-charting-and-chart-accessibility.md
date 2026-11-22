@@ -1,71 +1,75 @@
-# ADR 0006 — Charting and chart accessibility
+# ADR 0006 — Gráficos y accesibilidad de los gráficos
 
-## Status
+## Estado
 
-Accepted (T8, 2026-11-20).
+Aceptada (T8, 2026-11-20)
 
-## Context
+## Contexto
 
-Explore needs one indicator across up to five geographies, three chart types
-(line, area, bar), level/YoY/index transforms, gap-aware series and a PNG
-export that includes a title, legend and World Bank attribution (S3, S7, S11).
-Charts are canvas-rendered, so they are invisible to screen readers unless the
-application supplies an accessible alternative and keyboard interaction. The
-plan rejects a visual-regression suite (cross-OS font rasterization) and asks
-for component tests against a fake renderer instead.
+Explore necesita un indicador para hasta cinco geografías, tres tipos de gráfico
+(línea, área, barra), transformaciones Level/YoY/índice, series sensibles a los
+huecos y una exportación PNG que incluya título, leyenda y atribución del Banco
+Mundial (S3, S7, S11). Los gráficos se renderizan en canvas, así que son invisibles
+para los lectores de pantalla salvo que la aplicación ofrezca una alternativa
+accesible y una interacción por teclado. El plan descarta una suite de regresión
+visual (por la rasterización de fuentes entre sistemas operativos) y pide pruebas de
+componentes contra un renderizador falso.
 
-## Decision
+## Decisión
 
-- **ECharts 6, tree-shaken.** Only `LineChart`, `BarChart`, `Grid`, `Tooltip`,
-  `Legend`, `Aria`, `Title`, `Graphic` and `CanvasRenderer` are registered, and
-  imports use `echarts/core` subpaths (never the `echarts` root). The
-  architecture test allows `echarts` in `src/ui` only; the core never sees it.
-- **A `ChartRenderer` port.** `renderer.ts` defines
-  `setOption/showTip/hideTip/toDataURL/resize/dispose`; `echarts-renderer.ts`
-  implements it with a `ResizeObserver` and a DPR-aware canvas. Components take
-  an injected factory, so tests use `FakeChartRenderer` and never need a canvas
-  implementation.
-- **Pure option builders.** `build-chart-option.ts` takes the explore model, a
-  resolved `ChartTheme` and a locale, and returns the option object. Export mode
-  adds the title, legend and attribution footer. `chart-theme.ts` reads the
-  design tokens from the document and falls back to the D9 palettes when the
-  custom properties are unavailable (tests, headless capture).
-- **Stable series styling.** `series-style.ts` fixes the geography-to-slot map
-  (ECU=1 … BOL=5, LCN/WLD share slot 6 with dashed/dotted lines), plus a symbol
-  per slot. Series never rely on colour alone.
-- **Keyboard scrubbing.** `use-chart-keyboard.ts` moves a cursor over the years
-  that have data in the first series: Left/Right step, Home/End jump, Escape
-  clears. It dispatches `showTip` and returns the polite announcement
-  `{geography}, {year}: {value}`. `ChartCanvas` renders that region, makes the
-  chart a focusable `role="group"` with a computed summary and keeps the canvas
-  `aria-hidden`.
-- **A data-table alternative on the same page.** `DataTable` aligns all series
-  over the year union, puts Ecuador first, uses `scope` attributes and renders a
-  visually hidden "No data" for gaps.
-- **PNG export through the same builder.** `export-png.ts` rebuilds the option
-  in export mode, asks the renderer for a 2x data URL and converts it to bytes;
-  T10 wires the native save dialog. The builder, not the renderer, owns the
-  title/attribution contract.
+- **ECharts 6, con tree-shaking.** Solo se registran `LineChart`, `BarChart`, `Grid`,
+  `Tooltip`, `Legend`, `Aria`, `Title`, `Graphic` y `CanvasRenderer`, y las
+  importaciones usan subrutas `echarts/core` (nunca la raíz `echarts`). La prueba de
+  arquitectura permite `echarts` solo en `src/ui`; el núcleo nunca lo ve.
+- **Un puerto `ChartRenderer`.** `renderer.ts` define
+  `setOption/showTip/hideTip/toDataURL/resize/dispose`; `echarts-renderer.ts` lo
+  implementa con un `ResizeObserver` y un canvas sensible al DPR. Los componentes
+  reciben una fábrica inyectada, así que las pruebas usan `FakeChartRenderer` y nunca
+  necesitan una implementación de canvas.
+- **Constructores de opciones puros.** `build-chart-option.ts` recibe el modelo de
+  Explore, un `ChartTheme` resuelto y una configuración regional, y devuelve el objeto
+  de opciones. El modo exportación agrega el título, la leyenda y el pie de
+  atribución. `chart-theme.ts` lee los tokens de diseño del documento y recurre a las
+  paletas de D9 cuando las propiedades personalizadas no están disponibles (pruebas,
+  captura sin interfaz).
+- **Estilo estable de las series.** `series-style.ts` fija el mapa geografía-ranura
+  (ECU=1 … BOL=5; LCN y WLD comparten la ranura 6 con líneas discontinuas y punteadas),
+  además de un símbolo por ranura. Las series nunca dependen solo del color.
+- **Recorrido por teclado del gráfico.** `use-chart-keyboard.ts` mueve un cursor por
+  los años con datos de la primera serie: Izquierda y Derecha avanzan, Inicio y Fin
+  saltan, y Escape lo limpia. Dispara `showTip` y devuelve el anuncio discreto
+  `{geography}, {year}: {value}`. `ChartCanvas` renderiza esa región, convierte el
+  gráfico en un `role="group"` enfocable con un resumen calculado y mantiene el canvas
+  con `aria-hidden`.
+- **Una alternativa de tabla en la misma página.** `DataTable` alinea todas las series
+  sobre la unión de años, pone Ecuador primero, usa atributos `scope` y muestra un
+  "No data" oculto visualmente para los huecos.
+- **Exportación PNG con el mismo constructor.** `export-png.ts` reconstruye la opción en
+  modo exportación, pide al renderizador una data URL a 2x y la convierte en bytes; T10
+  conecta el diálogo nativo de guardado. El contrato de título y atribución lo controla
+  el constructor, no el renderizador.
 
-## Consequences
+## Consecuencias
 
-- Chart logic (series order, colors, gaps, transforms, export metadata) is
-  covered by fast unit tests; only the thin ECharts adapter needs a DOM.
-- The bundle grows by roughly 200 KB raw (~95 KB gzip for the lazy dashboard
-  chunk), still within the 700 KiB gzip budget. The production chunk is
-  tree-shaken by construction; importing the ECharts root would be a review
-  defect.
-- The chart is duplicated information by design: canvas plus live region plus
-  table. The table is always reachable through the view toggle.
-- PNG export is a chart screenshot at 2x with data labels and attribution; it is
-  not a print-quality typeset document.
+- La lógica de los gráficos (orden de series, colores, huecos, transformaciones,
+  metadatos de exportación) queda cubierta por pruebas unitarias rápidas; solo el
+  adaptador delgado de ECharts necesita un DOM.
+- El bundle crece unos 200 KB sin comprimir (~95 KB con gzip para el chunk diferido
+  del dashboard), todavía dentro del presupuesto de 700 KiB con gzip. El chunk de
+  producción tiene tree-shaking por construcción; importar la raíz de ECharts sería un
+  defecto de revisión.
+- La información está duplicada por diseño: canvas, región en vivo y tabla. La tabla
+  siempre está disponible mediante el selector de vista.
+- La exportación PNG es una captura del gráfico a 2x con etiquetas de datos y
+  atribución; no es un documento tipográfico de calidad de impresión.
 
-## Alternatives
+## Alternativas
 
-- **uPlot:** smaller, but no accessible tooltip/ARIA story and no export helper.
-- **Observable Plot:** weak interaction and no legend/tooltip control at this
-  level of detail.
-- **Recharts:** an SVG React tree is heavier for multi-series charts and gives
-  less control over the canvas export and keyboard scrubbing.
-- **Server-side rendering to PNG:** would add a heavy native dependency to a
-  desktop app that must build on three operating systems.
+- **uPlot:** más pequeño, pero sin una historia de tooltip accesible ni de ARIA, y sin
+  un auxiliar de exportación.
+- **Observable Plot:** interacción débil y sin control de leyenda ni de tooltip a este
+  nivel de detalle.
+- **Recharts:** un árbol React de SVG es más pesado para gráficos de varias series y
+  ofrece menos control sobre la exportación desde canvas y el recorrido por teclado.
+- **Renderizado del lado del servidor a PNG:** agregaría una dependencia nativa pesada
+  a una aplicación de escritorio que debe compilar en tres sistemas operativos.

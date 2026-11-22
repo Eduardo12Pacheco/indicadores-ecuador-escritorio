@@ -1,79 +1,85 @@
-# ADR 0007 — Browser end-to-end and accessibility testing strategy
+# ADR 0007 — Estrategia de pruebas end-to-end en navegador y de accesibilidad
 
-## Status
+## Estado
 
-Accepted (T11, 2026-11-20).
+Aceptada (T11, 2026-11-20)
 
-## Context
+## Contexto
 
-The desktop app is a React UI over a thin Rust core. Most product logic is
-already covered by Vitest and Rust tests, but three classes of defects can only
-be caught in a real browser: hash-router flows, persistence through the real
-`localStorage` adapter, and browser accessibility/layout behavior. The plan
-requires `offline.spec.ts` to prove S1 with a network guard, `a11y.spec.ts` to
-scan every route × theme × language with axe (S11), and `states.spec.ts` to
-exercise the recovery paths from S12. Native E2E is a separate layer (T12).
+La aplicación de escritorio es una UI en React sobre un núcleo delgado en Rust. La
+mayor parte de la lógica del producto ya está cubierta por pruebas de Vitest y de
+Rust, pero tres clases de defectos solo pueden detectarse en un navegador real:
+flujos del router por hash, persistencia a través del adaptador real de
+`localStorage` y comportamiento de accesibilidad y de layout en el navegador. El plan
+exige que `offline.spec.ts` demuestre S1 con un guardia de red, que `a11y.spec.ts`
+ejecute axe sobre cada ruta, tema e idioma (S11), y que `states.spec.ts` ejercite las
+rutas de recuperación de S12. El E2E nativo es una capa separada (T12).
 
-## Decision
+## Decisión
 
-- **Playwright 1.65, two browser projects.** Chromium and WebKit run the same
-  specs at 1280×800. WebKit approximates WKWebView/WebKitGTK; Chromium matches
-  WebView2. Traces are retained on failure and screenshots are failure-only;
-  there is no visual-regression suite because cross-OS font rasterization makes
-  it brittle.
-- **Test the production frontend.** The config runs `npm run build:e2e` and
-  Vite preview on port 18173. That build loads the mini JSON snapshot through
-  the in-memory adapter, so tests exercise the same code paths as the browser
-  build while staying deterministic and offline. The native IPC adapter is
-  covered by Rust command tests and by T12.
-- **Seed state before first paint.** `e2e/support/fixtures.ts` seeds the
-  mirrored theme/language keys and the authoritative settings document once per
-  context (guarded by `sessionStorage`) so a reload keeps what the app itself
-  persisted. Tests can inject the same `e2e:fault` keys the adapter understands.
-- **No sleeps.** The suite uses web-first assertions only. `waitForTimeout` is
-  forbidden by review and checked by the acceptance command.
-- **Full axe scans, no exclusions.** `e2e/support/a11y.ts` runs axe tags
-  `wcag2a`, `wcag2aa`, `wcag21a` and `wcag21aa` over seven routes × two themes
-  × two languages, plus four open dialogs. Any exclusion would need a written
-  justification; the current suite has none.
-- **The network guard is the S1 evidence.** `offline.spec.ts` aborts every
-  non-localhost request and asserts `blockedRequests.length === 0` after a full
-  Explore → Compare → Save → Export flow.
-- **Platform modifiers come from the user agent, not the host OS.** Playwright
-  WebKit reports a macOS UA even on Linux, so helpers derive `Meta`/`Control`
-  from `navigator.userAgent`, mirroring `detectPlatform` in the app.
+- **Playwright 1.65, con dos proyectos de navegador.** Chromium y WebKit ejecutan las
+  mismas especificaciones a 1280×800. WebKit aproxima WKWebView y WebKitGTK; Chromium
+  se parece a WebView2. Las trazas se conservan ante fallos y las capturas solo se
+  guardan cuando falla una prueba; no hay una suite de regresión visual porque la
+  rasterización de fuentes entre sistemas operativos la vuelve frágil.
+- **Probar el frontend de producción.** La configuración ejecuta `npm run build:e2e` y
+  el preview de Vite en el puerto 18173. Ese build carga la instantánea JSON mínima a
+  través del adaptador en memoria, así que las pruebas ejercitan las mismas rutas de
+  código que el build del navegador, manteniéndose deterministas y sin conexión. El
+  adaptador IPC nativo está cubierto por las pruebas de comandos de Rust y por T12.
+- **Sembrar el estado antes del primer render.** `e2e/support/fixtures.ts` siembra las
+  claves espejo de tema e idioma y el documento de configuración autoritativo una sola
+  vez por contexto (protegido por `sessionStorage`), de modo que una recarga conserve lo
+  que la propia aplicación persistió. Las pruebas pueden inyectar las mismas claves
+  `e2e:fault` que entiende el adaptador.
+- **Sin esperas fijas.** La suite usa solo aserciones web-first. `waitForTimeout` está
+  prohibido por revisión y lo verifica el comando de aceptación.
+- **Escaneos completos de axe, sin exclusiones.** `e2e/support/a11y.ts` ejecuta las
+  etiquetas de axe `wcag2a`, `wcag2aa`, `wcag21a` y `wcag21aa` sobre siete rutas, dos
+  temas y dos idiomas, más cuatro diálogos abiertos. Cualquier exclusión requeriría una
+  justificación escrita; la suite actual no tiene ninguna.
+- **El guardia de red es la evidencia de S1.** `offline.spec.ts` aborta toda solicitud
+  que no sea a localhost y afirma `blockedRequests.length === 0` después de un flujo
+  completo Explore → Compare → Save → Export.
+- **Los modificadores de plataforma provienen del user agent, no del sistema operativo
+  anfitrión.** WebKit de Playwright informa un UA de macOS incluso en Linux, así que los
+  helpers derivan `Meta` o `Control` de `navigator.userAgent`, en espejo de
+  `detectPlatform` en la aplicación.
 
-## Consequences
+## Consecuencias
 
-- CI needs `npx playwright install --with-deps chromium webkit` plus the Tauri
-  Linux prerequisites for the build. The browser suite is not part of the fast
-  `verify:fast` loop; it runs in the dedicated CI job.
-- Test failures produce a trace and screenshot in `test-results/`, which the CI
-  job uploads. Passing runs stay clean.
-- Native-only behavior (single instance, window state, file dialogs) remains
-  untested at this layer and is owned by T12; macOS native E2E is out of scope
-  because `tauri-driver` has no WKWebView driver, as documented at
-  <https://v2.tauri.app/develop/tests/webdriver/> and checked on 2026-11-19.
-- The in-memory adapter needs the documented `e2e:fault` keys to simulate
-  dataset, catalog, observation and snapshot failures. Those keys are test
-  hooks, not user-facing configuration.
+- La CI necesita `npx playwright install --with-deps chromium webkit` y los
+  prerrequisitos de Tauri en Linux para el build. La suite de navegador no forma parte
+  del ciclo rápido `verify:fast`; se ejecuta en el job dedicado de CI.
+- Las fallas de prueba producen una traza y una captura en `test-results/`, que el job
+  de CI sube. Las ejecuciones exitosas quedan limpias.
+- El comportamiento exclusivo de la app nativa (instancia única, estado de la ventana,
+  diálogos de archivos) sigue sin probarse en esta capa y lo gestiona T12. El E2E
+  nativo en macOS queda fuera de alcance porque `tauri-driver` no tiene driver para
+  WKWebView, según se documenta en <https://v2.tauri.app/develop/tests/webdriver/> y
+  se verificó el 2026-11-19.
+- El adaptador en memoria necesita las claves `e2e:fault` documentadas para simular
+  fallas de dataset, catálogo, observación e instantánea. Esas claves son ganchos de
+  prueba, no configuración visible para el usuario.
 
-## Alternatives
+## Alternativas
 
-- **Cypress instead of Playwright.** Cypress has a mature runner and time-travel
-  debugging, but its WebKit support is experimental and it does not match the
-  Tauri WebView story as closely as Playwright's bundled Chromium and WebKit.
-- **Testing only against a development server.** Faster to start, but it would
-  not exercise the production build, the hashed asset paths or the in-memory
-  fixture loading path that the release uses.
-- **Native E2E on every platform.** Rejected because `tauri-driver` supports
-  Windows and Linux only; a macOS embedded-provider plugin would change the
-  release binary, contradicting the rule that tested binaries are the shipped
-  ones (ADR 0007 / D18).
-- **Visual-regression snapshots.** Rejected: cross-OS font rasterization makes
-  screenshots brittle, so screenshots remain documentation generated by the
-  media project, not pass/fail assertions.
-- **Unit tests with a real canvas implementation.** Rejected: jsdom has no
-  canvas, and asserting ECharts internals would duplicate the vendor's tests.
-  A `ChartRenderer` fake covers the interaction contract; the browser and native
-  suites cover real rendering.
+- **Cypress en lugar de Playwright.** Cypress tiene un runner maduro y depuración con
+  viaje en el tiempo, pero su soporte para WebKit es experimental y no coincide tan de
+  cerca con la historia de WebView de Tauri como el Chromium y el WebKit incluidos en
+  Playwright.
+- **Probar solo contra un servidor de desarrollo.** Arranca más rápido, pero no
+  ejercitaría el build de producción, las rutas de assets con hash ni la carga de
+  fixtures en memoria que usa la release.
+- **E2E nativo en cada plataforma.** Descartado porque `tauri-driver` soporta solo
+  Windows y Linux; un plugin de proveedor embebido para macOS cambiaría el binario de
+  release, contradiciendo la regla de que los binarios probados son los que se
+  distribuyen (ADR 0007 / D18).
+- **Pruebas de regresión visual con capturas de referencia.** Descartadas: la
+  rasterización de fuentes entre sistemas operativos vuelve frágiles las capturas, así
+  que siguen siendo documentación generada por el proyecto de medios, no aserciones de
+  aprobado o fallido.
+- **Pruebas unitarias con una implementación real de canvas.** Descartadas: jsdom no
+  tiene canvas, y afirmar internos de ECharts duplicaría las pruebas del proveedor. Un
+  fake de `ChartRenderer` cubre el contrato de interacción; las suites de navegador y
+  nativa cubren el renderizado real.

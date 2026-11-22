@@ -1,58 +1,65 @@
-# ADR 0005 — UI system: CSS tokens and accessible primitives
+# ADR 0005 — Sistema de UI: tokens CSS y primitivas accesibles
 
-## Status
+## Estado
 
-Accepted (T7, 2026-11-20).
+Aceptada (T7, 2026-11-20)
 
-## Context
+## Contexto
 
-The desktop app needs a finished-looking, bilingual, keyboard-first and
-WCAG-checked interface without adopting a component framework that would make
-it look like a template. The design direction in D9 fixes exact colours,
-contrast thresholds, type, spacing, motion and layout values. Those values are
-contracts, not suggestions: the plan asks for a test that parses them and fails
-when a pair drops below its documented WCAG ratio.
+La aplicación de escritorio necesita una interfaz con apariencia terminada,
+bilingüe, priorizada para el teclado y verificada con WCAG, sin adoptar un framework
+de componentes que la haga parecer una plantilla. La dirección de diseño D9 fija
+colores exactos, umbrales de contraste, tipografía, espaciado, movimiento y valores
+de layout. Esos valores son contratos, no sugerencias: el plan pide una prueba que
+los analice y falle cuando un par caiga por debajo de su ratio WCAG documentado.
 
-## Decision
+## Decisión
 
-- **Tokens in CSS custom properties.** `src/ui/design/tokens.css` is the single
-  source for colour, type, spacing, radii, elevation, motion and z-index.
-  Light is `:root`; explicit dark is `:root[data-theme="dark"]`; the system
-  preference is a `prefers-color-scheme: dark` block constrained to
-  `:root:not([data-theme])`. `theme.ts` sets `data-theme` only for explicit
-  light/dark, so the OS owns "System".
-- **Fonts are vendored.** `npm run fonts:sync` copies the latin variable woff2
-  subsets and OFL texts from Fontsource 5.3.0 into `src/ui/design/fonts/`.
-  No network request is made for a font (S1).
-- **CSS Modules for component styles.** No Tailwind, no runtime CSS-in-JS, no
-  duplicate design system. A `*.module.css` declaration keeps classes typed.
-- **Radix primitives for the hard accessibility behaviour** (Dialog focus
-  trap and focus return, Tabs roving focus, Tooltip, ToggleGroup, Switch,
-  Slider) with our own styling. `lucide-react` supplies one-named-import icons.
-- **Typed i18n, not i18next.** `en.ts` is the `as const` source of truth; `es.ts`
-  is typed as the same shape. A parity test fails on missing keys, empty
-  strings or mismatched `{params}`. `Intl.PluralRules` powers `tp`.
-- **Tests are contracts.** `tokens.contrast.test.ts` parses the CSS and
-  recomputes every D9 ratio; primitive tests cover keyboard behaviour; axe runs
-  over the shell and the gallery in both themes.
+- **Tokens en propiedades personalizadas de CSS.** `src/ui/design/tokens.css` es la
+  única fuente para color, tipografía, espaciado, radios, elevación, movimiento y
+  z-index. El tema claro es `:root`; el oscuro explícito es
+  `:root[data-theme="dark"]`; la preferencia del sistema es un bloque
+  `prefers-color-scheme: dark` restringido a `:root:not([data-theme])`.
+  `theme.ts` establece `data-theme` solo para claro u oscuro explícitos, así que el
+  sistema operativo controla "Sistema".
+- **Las fuentes se incluyen en el propio proyecto (vendored).** `npm run fonts:sync`
+  copia los subconjuntos latinos variables en woff2 y los textos OFL desde
+  Fontsource 5.3.0 hacia `src/ui/design/fonts/`. No se hace ninguna solicitud de red
+  para una fuente (S1).
+- **CSS Modules para los estilos de componentes.** Sin Tailwind, sin CSS-in-JS en
+  tiempo de ejecución y sin un sistema de diseño duplicado. Una declaración
+  `*.module.css` mantiene las clases tipadas.
+- **Primitivas de Radix para los comportamientos de accesibilidad complejos** (trampa
+  de foco y retorno de foco en Dialog, foco roving en Tabs, Tooltip, ToggleGroup,
+  Switch, Slider), con estilos propios. `lucide-react` aporta íconos con una sola
+  importación nombrada.
+- **i18n tipado, no i18next.** `en.ts` es la fuente de verdad `as const`; `es.ts` se
+  tipa con la misma forma. Una prueba de paridad falla ante claves faltantes,
+  cadenas vacías o `{params}` que no coinciden. `Intl.PluralRules` impulsa `tp`.
+- **Las pruebas son contratos.** `tokens.contrast.test.ts` analiza el CSS y recalcula
+  cada ratio de D9; las pruebas de primitivas cubren el comportamiento de teclado;
+  axe se ejecuta sobre el shell y la galería en ambos temas.
 
-## Consequences
+## Consecuencias
 
-- A token edit is a tested change, and a failing ratio names the pair.
-- The app ships three woff2 files (~125 KB) and no font network dependency.
-- New components must reuse primitives; adding a one-off modal or toggle is a
-  review defect.
-- The gallery route (`#/design`) is built only outside production so the
-  production bundle has no design-only entry point.
-- The D9 palette did not define a text colour for the accent fill. We added
-  `--color-on-accent` (`#15171C` in both themes) because the contrast gate must
-  cover text placed on the accent; D9 only recorded the light ratio (10.91).
+- Un cambio de token es un cambio probado, y un ratio que falla identifica el par.
+- La aplicación incluye tres archivos woff2 (~125 KB) y no depende de la red para
+  las fuentes.
+- Los componentes nuevos deben reutilizar primitivas; agregar un modal o un toggle
+  propio es un defecto de revisión.
+- La ruta de la galería (`#/design`) solo se compila fuera de producción, para que el
+  bundle de producción no tenga un punto de entrada exclusivo de diseño.
+- La paleta de D9 no definía un color de texto para el relleno de acento. Agregamos
+  `--color-on-accent` (`#15171C` en ambos temas) porque la puerta de contraste debe
+  cubrir el texto colocado sobre el acento; D9 solo registró el ratio del tema claro
+  (10.91).
 
-## Alternatives
+## Alternativas
 
-- **Tailwind + shadcn/ui:** rejected in D8 (templated look, extra build layer,
-  token values would live in config rather than the binding CSS).
-- **CSS-in-JS:** rejected (runtime cost, extra dependency, no static parse for
-  the contrast contract).
-- **i18next:** rejected in D11; the app needs two static dictionaries, not a
-  plugin ecosystem.
+- **Tailwind + shadcn/ui:** descartado en D8 (aspecto de plantilla, capa extra de
+  build, y los valores de los tokens vivirían en la configuración en lugar de en el
+  CSS vinculante).
+- **CSS-in-JS:** descartado (costo en tiempo de ejecución, dependencia adicional y
+  sin análisis estático para el contrato de contraste).
+- **i18next:** descartado en D11; la app necesita dos diccionarios estáticos, no un
+  ecosistema de plugins.

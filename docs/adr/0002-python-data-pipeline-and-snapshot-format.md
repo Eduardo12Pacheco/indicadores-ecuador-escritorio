@@ -1,82 +1,91 @@
-# ADR 0002: Python data pipeline and schema-v1 snapshot
+# ADR 0002: Pipeline de datos en Python e instantánea schema-v1
 
-## Status
+## Estado
 
-Accepted
+Aceptada
 
-## Context
+## Contexto
 
-Ecuador Indicators ships a bundled, offline snapshot of 38 World Bank World
-Development Indicators for seven geographies. The snapshot must be reproducible
-from a committed raw cache, must be verifiable byte for byte, and must be
-consumed read-only by the desktop runtime. The owner's strongest language is
-Python, and the data lineage should be visible and testable independently of
-the desktop application.
+Ecuador Indicators incluye una instantánea offline de 38 World Development
+Indicators del Banco Mundial para siete geografías. La instantánea debe ser
+reproducible a partir de una caché raw versionada, debe poder verificarse byte a
+byte y debe ser consumida en modo solo lectura por el runtime de escritorio. El
+lenguaje más fuerte del propietario es Python, y el linaje de los datos debe ser
+visible y comprobable de forma independiente a la aplicación de escritorio.
 
-The World Bank WDI API v2 needs no key, returns JSON with pagination, and
-publishes under CC BY 4.0 with per-indicator upstream providers. Names and
-descriptions exist in English and Spanish. Some series are modelled estimates
-and many have multi-year reporting lags, so the artifact must record what was
-retrieved and when rather than imply that missing years are zero.
+La API WDI v2 del Banco Mundial no necesita clave, devuelve JSON con paginación y
+se publica bajo CC BY 4.0 con proveedores de origen por indicador. Los nombres y
+descripciones existen en inglés y en español. Algunas series son estimaciones
+modeladas y muchas tienen rezagos de reporte de varios años, así que el artefacto
+debe registrar qué se obtuvo y cuándo, en lugar de sugerir que los años faltantes
+son cero.
 
-## Decision
+## Decisión
 
-Keep a separate Python package, `pipeline/` (`ecuador-data`), with the same
-hexagonal rules as the other runtimes: a pure `domain`, `application` use cases,
-`ports` and `adapters`. It owns four artifacts and commands:
+Mantener un paquete Python separado, `pipeline/` (`ecuador-data`), con las mismas
+reglas hexagonales que los demás runtimes: un `domain` puro, casos de uso en
+`application`, `ports` y `adapters`. Es responsable de cuatro artefactos y comandos:
 
-- `refresh` fetches English and Spanish metadata plus one observation file per
-  indicator from `https://api.worldbank.org/v2`, writes canonical JSON
-  (`sort_keys`, compact separators, UTF-8, trailing newline) under `data/raw/`,
-  and records URL, retrieval time, byte size and SHA-256 per file in
-  `data/MANIFEST.json`.
-- `build` is offline and deterministic: it reads the raw cache, verifies every
-  file against the manifest, and writes a SQLite database with schema version 1
-  (`PRAGMA user_version = 1`, tables `meta`, `topic`, `geography`, `indicator`,
-  `observation`, all `WITHOUT ROWID` unless noted, foreign keys enabled).
-- `verify` rechecks raw checksums, the snapshot file hash, the schema, counts and
-  the recomputed logical hash, exiting `2` on any mismatch.
-- `export-json` derives the JSON shape used by the in-memory adapter and test
-  fixtures; `--subset mini` selects the committed six-indicator, five-geography
-  catalog in `pipeline/catalog/mini.toml`.
+- `refresh` obtiene los metadatos en inglés y español, y un archivo de
+  observaciones por indicador desde `https://api.worldbank.org/v2`, escribe JSON
+  canónico (`sort_keys`, separadores compactos, UTF-8, salto de línea final) en
+  `data/raw/` y registra por archivo la URL, la hora de obtención, el tamaño en
+  bytes y el SHA-256 en `data/MANIFEST.json`.
+- `build` es offline y determinista: lee la caché raw, verifica cada archivo
+  contra el manifiesto y escribe una base SQLite con esquema versión 1
+  (`PRAGMA user_version = 1`, tablas `meta`, `topic`, `geography`, `indicator` y
+  `observation`, todas `WITHOUT ROWID` salvo indicación contraria, con claves
+  foráneas habilitadas).
+- `verify` vuelve a revisar los checksums de la caché raw, el hash del archivo de
+  la instantánea, el esquema, los conteos y el hash lógico recalculado, y termina
+  con código `2` ante cualquier discrepancia.
+- `export-json` deriva la forma JSON que usa el adaptador en memoria y los
+  fixtures de prueba; `--subset mini` selecciona el catálogo versionado de seis
+  indicadores y cinco geografías en `pipeline/catalog/mini.toml`.
 
-Two hashes have different jobs. `meta.logical_sha256` is computed over a
-canonical, ordered text dump of every table (topic, geography, indicator,
-observation, meta excluding the hash itself). It proves that the content is
-reproducible from the raw cache regardless of row insertion order or SQLite
-page layout. `data/MANIFEST.json` also records the SHA-256 of the snapshot file
-bytes, which proves that the shipped file is the committed one. The Rust runtime
-only checks the schema, counts and `PRAGMA quick_check`; it deliberately does
-not recompute the logical hash, because that would couple two languages to one
-float-formatting convention.
+Dos hashes cumplen funciones distintas. `meta.logical_sha256` se calcula sobre un
+volcado de texto canónico y ordenado de cada tabla (topic, geography, indicator,
+observation, meta sin el propio hash). Demuestra que el contenido es reproducible
+desde la caché raw sin importar el orden de inserción de las filas ni la
+disposición de páginas de SQLite. `data/MANIFEST.json` también registra el
+SHA-256 de los bytes del archivo de la instantánea, lo que demuestra que el
+archivo distribuido es el versionado. El runtime de Rust solo verifica el
+esquema, los conteos y `PRAGMA quick_check`; deliberadamente no recalcula el hash
+lógico, porque eso acoplaría dos lenguajes a una misma convención de formato de
+punto flotante.
 
-Exit codes are part of the contract: `0` success, `1` unexpected error, `2`
-integrity/validation failure, `3` source unavailable or protocol error.
+Los códigos de salida forman parte del contrato: `0` éxito, `1` error inesperado,
+`2` fallo de integridad o de validación, `3` fuente no disponible o error de
+protocolo.
 
-## Consequences
+## Consecuencias
 
-- The raw cache and the snapshot are committed, so a contributor can run
-  `build` and `verify` offline. The trade-off is repository size (the raw cache
-  is a few megabytes); it is generated data and never edited by hand.
-- Determinism depends on canonical JSON input and ordered inserts. Float values
-  are stored as JSON numbers and formatted for hashing with Python's `repr`,
-  which round-trips IEEE-754 doubles exactly.
-- The desktop runtime has no Python or DuckDB dependency: it reads a SQLite file
-  with a fixed schema. Custom snapshots must satisfy the same schema.
-- Updating the dataset is an explicit `refresh` plus a review of the generated
-  `data/` diff; the app cannot silently change data.
-- The World Bank licence and attribution live in `meta` and in the application's
-  About screen, not only in the repository documentation.
+- La caché raw y la instantánea están versionadas, así que quien contribuye puede
+  ejecutar `build` y `verify` sin conexión. La compensación es el tamaño del
+  repositorio (la caché raw ocupa unos pocos megabytes); son datos generados y
+  nunca se editan a mano.
+- El determinismo depende de JSON canónico como entrada e inserciones ordenadas.
+  Los valores de punto flotante se guardan como números JSON y se formatean para
+  el hash con `repr` de Python, que reproduce exactamente los doubles IEEE-754.
+- El runtime de escritorio no tiene dependencias de Python ni de DuckDB: lee un
+  archivo SQLite con un esquema fijo. Las instantáneas personalizadas deben cumplir
+  el mismo esquema.
+- Actualizar el conjunto de datos es un `refresh` explícito seguido de una revisión
+  del diff generado en `data/`; la aplicación no puede cambiar datos en silencio.
+- La licencia y la atribución del Banco Mundial viven en `meta` y en la pantalla
+  Acerca de de la aplicación, no solo en la documentación del repositorio.
 
-## Alternatives
+## Alternativas
 
-- **Fetch the API at runtime**: breaks offline-first (S1) and makes the dataset
-  non-reproducible.
-- **CSV as the intermediate format**: loses types and nested metadata; canonical
-  JSON matches the API shape and is easy to diff.
-- **Parquet or DuckDB as the bundled artifact**: heavier for the desktop runtime
-  and adds a native dependency to three operating systems for no user benefit.
-- **A single file hash only**: the file hash changes with SQLite page layout and
-  cannot distinguish a rebuilt-but-equivalent snapshot from changed content.
-- **No raw cache in git**: saves space but makes the build unverifiable and
-  irreproducible offline.
+- **Consultar la API en tiempo de ejecución**: rompe el enfoque offline-first (S1)
+  y hace que el conjunto de datos no sea reproducible.
+- **CSV como formato intermedio**: pierde tipos y metadatos anidados; el JSON
+  canónico coincide con la forma de la API y es fácil de comparar.
+- **Parquet o DuckDB como artefacto incluido**: más pesado para el runtime de
+  escritorio y agrega una dependencia nativa en tres sistemas operativos sin
+  beneficio para el usuario.
+- **Un solo hash del archivo**: el hash cambia con la disposición de páginas de
+  SQLite y no puede distinguir una instantánea reconstruida pero equivalente de
+  un contenido modificado.
+- **Sin caché raw en git**: ahorra espacio, pero hace que el build no sea
+  verificable ni reproducible sin conexión.

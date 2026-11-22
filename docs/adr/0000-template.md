@@ -1,22 +1,22 @@
-# ADR NNNN: Short decision title
+# ADR NNNN: Título breve de la decisión
 
-## Status
+## Estado
 
-Proposed
+Propuesta
 
-## Context
+## Contexto
 
-Describe the forces at play, the constraints and the evidence available.
+Describe las fuerzas en juego, las restricciones y la evidencia disponible.
 
-## Decision
+## Decisión
 
-State the decision precisely, including the boundaries it sets.
+Enuncia la decisión con precisión, incluidos los límites que establece.
 
-## Consequences
+## Consecuencias
 
-List the positive and negative consequences, the follow-up work it creates and
-how the decision is verified.
+Enumera las consecuencias positivas y negativas, el trabajo de seguimiento que
+crea y cómo se verifica la decisión.
 
-## Alternatives
+## Alternativas
 
-List the options that were considered and why they were not chosen.
+Enumera las opciones consideradas y explica por qué no se eligieron.
