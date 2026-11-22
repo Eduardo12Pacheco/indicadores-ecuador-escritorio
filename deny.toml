@@ -14,7 +14,17 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
-ignore = []
+# Each entry is an unmaintained or unsound transitive crate of the Tauri 2 Linux
+# stack that has no patched release reachable from this workspace (checked on
+# 2026-11-21: `cargo update --workspace --dry-run` locks 0 packages). Remove an
+# entry as soon as a Tauri release stops pulling its crate.
+ignore = [
+  { id = "RUSTSEC-2024-0370", reason = "proc-macro-error is unmaintained with no patched release; reached through glib-macros in Tauri's GTK 3 stack" },
+  { id = "RUSTSEC-2024-0429", reason = "glib 0.18 is pinned by Tauri's GTK 3 stack (the fix needs glib >= 0.20); the app does not use glib directly" },
+  { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained with no patched release; reached through zbus in Tauri's opener and single-instance plugins" },
+  { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained with no patched release; reached through zbus in Tauri's opener and single-instance plugins" },
+  { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained with no patched release; reached through zvariant in Tauri's opener and single-instance plugins" },
+]
 
 [licenses]
 version = 2
