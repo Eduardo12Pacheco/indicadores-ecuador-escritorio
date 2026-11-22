@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const README = join(ROOT, "README.md");
-const README_ES = join(ROOT, "README.es.md");
+const README_ES = join(ROOT, "README.md");
+const README_EN = join(ROOT, "README.en.md");
 const ARCHITECTURE = join(ROOT, "docs", "ARCHITECTURE.md");
 
 const ADR_SECTIONS = ["## Status", "## Context", "## Decision", "## Consequences"];
@@ -59,21 +59,25 @@ function adrFiles() {
 }
 
 describe("documentation", () => {
-  it("keeps the English README within the 150-line cap", () => {
-    expect(existsSync(README)).toBe(true);
-    const lines = read(README).split("\n").length - (read(README).endsWith("\n") ? 1 : 0);
-    expect(lines).toBeLessThanOrEqual(150);
+  it("keeps both READMEs within the 150-line cap", () => {
+    for (const readme of [README_ES, README_EN]) {
+      expect(existsSync(readme), relative(ROOT, readme)).toBe(true);
+      const text = read(readme);
+      const lines = text.split("\n").length - (text.endsWith("\n") ? 1 : 0);
+      expect(lines, relative(ROOT, readme)).toBeLessThanOrEqual(150);
+    }
   });
 
-  it("ships a Spanish README with the same section count", () => {
+  it("ships the Spanish README with the same section count as the English one", () => {
     expect(existsSync(README_ES)).toBe(true);
+    expect(existsSync(README_EN)).toBe(true);
     const headings = (path) => read(path).match(/^## /gm)?.length ?? 0;
-    expect(headings(README_ES)).toBe(headings(README));
-    expect(headings(README)).toBeGreaterThan(0);
+    expect(headings(README_ES)).toBe(headings(README_EN));
+    expect(headings(README_EN)).toBeGreaterThan(0);
   });
 
   it("keeps every relative link and image in the READMEs and docs resolvable", () => {
-    const files = [README, README_ES, ...docsFiles()];
+    const files = [README_ES, README_EN, ...docsFiles()];
     const broken = [];
     for (const file of files) {
       for (const { target, line } of relativeLinks(file)) {
@@ -95,8 +99,8 @@ describe("documentation", () => {
 
   it("has no unfinished markers in the documentation", () => {
     const files = [
-      README,
       README_ES,
+      README_EN,
       join(ROOT, "CONTRIBUTING.md"),
       join(ROOT, "SECURITY.md"),
       ...docsFiles(),
@@ -120,9 +124,10 @@ describe("documentation", () => {
     }
   });
 
-  it("renders mermaid diagrams in the README and the architecture guide", () => {
+  it("renders mermaid diagrams in both READMEs and the architecture guide", () => {
     expect(existsSync(ARCHITECTURE)).toBe(true);
-    expect(read(README)).toContain("```mermaid");
+    expect(read(README_ES)).toContain("```mermaid");
+    expect(read(README_EN)).toContain("```mermaid");
     expect(read(ARCHITECTURE)).toContain("```mermaid");
   });
 });
