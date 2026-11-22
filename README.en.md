@@ -1,77 +1,44 @@
-# Ecuador Indicators
-[Español](README.md) · **English**
+<p align="center">
+  <img src="docs/assets/readme/hero.en.svg" width="100%" alt="Ecuador Indicators: desktop app to explore and compare Ecuadorian indicators from an offline World Bank snapshot.">
+</p>
 
-[![CI](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/actions/workflows/ci.yml/badge.svg)](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/Eduardo12Pacheco/indicadores-ecuador-escritorio)](https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/releases/latest)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-1B47C4)](docs/INSTALL.md)
+<p align="center">
+  Explore, compare and export Ecuadorian indicators from an offline World Bank snapshot.<br>
+  [Español](README.md) · <b>English</b>
+</p>
 
-A polished, offline-first desktop app for exploring, comparing and exporting
-Ecuadorian indicators from a bundled World Bank snapshot.
+<p align="center">
+  <a href="https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/actions/workflows/ci.yml"><img src="https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio/releases/latest"><img src="https://img.shields.io/github/v/release/Eduardo12Pacheco/indicadores-ecuador-escritorio" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
+</p>
 
-**Install:** read the [installation guide](docs/INSTALL.md) first; builds are
-unsigned, so SmartScreen and Gatekeeper ask for confirmation. The first tagged
-release is pending; until then, [run it from source](#development).
+<p align="center">
+  <img src="docs/media/hero.gif" width="640" alt="Exploring Ecuador's GDP in the app: indicator list, year range and line chart.">
+</p>
 
-![Animated tour of Ecuador Indicators](docs/media/hero.gif)
+## What it is
 
-## Why
+Ecuador Indicators is a desktop app (Tauri 2, React and Rust) to explore and compare 38 World Development Indicators from the World Bank for Ecuador, Colombia, Peru, Chile, Bolivia, Latin America & the Caribbean and the World. It works without a browser, an API key or an internet connection.
 
-Ecuadorian statistics are spread across portals with different formats and
-licences. This app bundles one reproducible World Bank snapshot that works
-without a browser, an API key or an internet connection, and treats the data as
-an editorial artifact: sourced, attributed, verifiable and honest about gaps.
-
-## Features
-
-- **Explore** 38 WDI indicators across 8 topics with peers, year ranges,
-  Level/YoY/Index transforms, three chart types and a data-table alternative.
-- **Compare** trajectories indexed to a base year, or a cross-country ranking
-  with Ecuador highlighted and missing values listed last.
-- **Search** with `Mod+K` (diacritic-insensitive in English and Spanish) and
-  keyboard shortcuts, plus saved views that restore the exact page state.
-- **Export** CSV (RFC 4180) and a 2× PNG with title, legend and attribution;
-  **Settings** cover theme, language, opt-in updates and custom snapshots.
-- **Accessible**: keyboard-first flows, WCAG 2.0/2.1 AA axe scans, light and
-  dark themes, complete English and Spanish UI.
-
-## Screenshots
+- **Explore**: 38 indicators across 8 topics, with peers, year ranges, Level/YoY/Index transforms and an accessible data-table alternative.
+- **Compare**: trajectories indexed to a base year, or a cross-country ranking with Ecuador highlighted.
+- **Export**: CSV (RFC 4180) and 2× PNG with title, legend and attribution.
+- **Accessible**: keyboard-first flows, WCAG 2.0/2.1 AA axe scans, light and dark themes, complete English and Spanish UI.
 
 | Explore | Compare | Data & About |
 |---|---|---|
 | ![Explore in light theme](docs/media/screenshots/explore-light.png) | ![Indexed trajectories](docs/media/screenshots/compare-trajectories.png) | ![Provenance and indicator sources](docs/media/screenshots/data-about.png) |
 
-More screenshots (dark mode, Spanish, palette) live in `docs/media/screenshots/`;
-all are captured with `npm run capture:media`.
+## Why it is different
 
-## Install
+Ecuadorian statistics are spread across portals with different formats and licences. This app starts from a single reproducible artifact:
 
-```bash
-sudo apt install ./ecuador-indicators_0.1.0_linux_x64.deb  # Linux
-open ecuador-indicators_0.1.0_macos_arm64.dmg               # macOS
-# Windows: run ecuador-indicators_0.1.0_windows_x64.exe
-```
+- **Verifiable snapshot**: the SQLite base is built from a raw cache with checksums; two builds from the same cache produce the same `logical_sha256`.
+- **Attribution in every output**: WDI is CC BY 4.0 and every indicator credits its provider; the PNG export carries the attribution.
+- **Checkable architecture**: a pure TypeScript domain, a thin Rust core and a Python pipeline that never enters the desktop runtime. Hexagonal rules are tested in all three languages.
 
-The AppImage, RPM, Intel DMG and MSI alternatives, checksums and
-`gh attestation verify` are in [docs/INSTALL.md](docs/INSTALL.md).
-
-## Data
-
-The bundled snapshot republishes 38 World Bank World Development Indicators
-(WDI, source id 2) for Ecuador, Colombia, Peru, Chile, Bolivia, Latin America &
-the Caribbean and the World. WDI is CC BY 4.0; every indicator credits its
-provider. See [docs/DATA.md](docs/DATA.md) for schema, lineage and limitations.
-
-```bash
-cd pipeline && uv sync --frozen
-uv run ecuador-data refresh   # network: World Bank API -> data/raw + MANIFEST.json
-uv run ecuador-data build     # offline: raw cache -> schema-v1 snapshot
-uv run ecuador-data verify    # checksums, counts, logical and file hashes
-```
-
-Two builds from the same raw cache produce the same `logical_sha256`.
-
-## Architecture
+## How it works
 
 ```mermaid
 flowchart LR
@@ -83,11 +50,19 @@ flowchart LR
   Pipeline["Python pipeline<br/>ecuador-data"] -->|"refresh + build"| Snapshot
 ```
 
-Three runtimes, one contract: a pure TypeScript domain, a thin Rust core and a
-Python pipeline that never enters the desktop runtime. Hexagonal rules are
-tested in all three languages; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The UI never touches SQLite: it talks to Rust over typed IPC. To regenerate the snapshot from the World Bank:
 
-## Tech stack
+```bash
+cd pipeline && uv sync --frozen
+uv run ecuador-data refresh   # network: World Bank API -> data/raw + MANIFEST.json
+uv run ecuador-data build     # offline: raw cache -> schema-v1 snapshot
+uv run ecuador-data verify    # checksums, counts, logical and file hashes
+```
+
+Schema, lineage and data limitations: [docs/DATA.md](docs/DATA.md). Full architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+<details>
+<summary>Tech stack</summary>
 
 | Area | Choice |
 |---|---|
@@ -99,7 +74,33 @@ tested in all three languages; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | Tests | Vitest + Testing Library + fast-check, Playwright + axe, cargo test + proptest, pytest + Hypothesis |
 | CI/CD | GitHub Actions on Linux, Windows and macOS; tag-driven releases |
 
-## Quality
+</details>
+
+## Quick start
+
+Requirements: Node.js 24 or later (26 recommended), stable Rust 1.95 or later and [uv](https://docs.astral.sh/uv/) 0.11 or later. On Linux, install the Tauri packages listed in [CONTRIBUTING.md](CONTRIBUTING.md#requisitos-previos) first.
+
+```bash
+git clone https://github.com/Eduardo12Pacheco/indicadores-ecuador-escritorio.git
+cd indicadores-ecuador-escritorio
+npm ci
+npm run tauri dev     # opens the app in development mode
+npm run verify        # lint, types, tests, Rust, Python, data, build and E2E
+```
+
+On Windows, run the same commands in PowerShell.
+
+There is no tagged release yet. When one exists, the installers are on the releases page with these names:
+
+```bash
+sudo apt install ./ecuador-indicators_0.1.0_linux_x64.deb  # Linux (Debian/Ubuntu)
+open ecuador-indicators_0.1.0_macos_arm64.dmg               # macOS (Apple Silicon)
+# Windows: run ecuador-indicators_0.1.0_windows_x64.exe
+```
+
+Other formats, checksums and `gh attestation verify` are in [docs/INSTALL.md](docs/INSTALL.md).
+
+## Results
 
 | Gate | Measured value |
 |---|---|
@@ -114,37 +115,22 @@ tested in all three languages; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 from `cargo llvm-cov -p indicators-core`. The gzip budget is 716,800 B and the
 native E2E suite runs on Linux in CI.
 
-## Development
+## Honest limitations
 
-```bash
-npm ci
-npm run tauri dev
-npm run verify
-```
-
-`npm run verify` runs Biome, `tsc`, Vitest coverage, Rust and Python checks,
-binding drift, data verification, version sync, the build, bundle budget,
-licence checks and both Playwright projects. See [docs/TESTING.md](docs/TESTING.md).
-
-## Limitations
-
-- Annual World Bank data only; many series lag by years and some are modelled
-  estimates, so the latest year can differ by indicator.
-- Not an official BCE or INEC statistics product; those sources are documented
-  as future adapters, not bundled.
-- Installers are unsigned: SmartScreen and Gatekeeper require approval.
-  Checksums and provenance attestations ship with every release.
-- Native E2E covers Linux only (`tauri-driver` has no WKWebView driver); the
-  same flows run in WebKit and Chromium in the browser suite.
+- Annual World Bank data only; many series lag by years and some are modelled estimates, so the latest year can differ by indicator.
+- Not an official BCE or INEC statistics product; those sources are documented as future adapters, not bundled.
+- No tagged release exists yet, and installers are unsigned: SmartScreen and Gatekeeper require approval. Checksums and provenance attestations ship with every release.
+- Native E2E covers Linux only (`tauri-driver` has no WKWebView driver); the same flows run in WebKit and Chromium in the browser suite.
 - Screenshots use the full snapshot through the in-memory adapter.
 
 ## Documentation
 
-[Architecture](docs/ARCHITECTURE.md) · [Configuration](docs/ARCHITECTURE.md#configuración) · [Data](docs/DATA.md) ·
-[Design](docs/DESIGN.md) · [Testing](docs/TESTING.md) · [Installation](docs/INSTALL.md) · [Releasing](docs/RELEASING.md) ·
-[Lakehouse](docs/LAKEHOUSE-MANIFEST.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Notices](THIRD_PARTY_NOTICES.md)
+[Architecture](docs/ARCHITECTURE.md) · [Configuration](docs/ARCHITECTURE.md#configuración) · [Data](docs/DATA.md) · [Design](docs/DESIGN.md) · [Testing](docs/TESTING.md) · [Installation](docs/INSTALL.md) · [Releasing](docs/RELEASING.md) · [Lakehouse](docs/LAKEHOUSE-MANIFEST.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Notices](THIRD_PARTY_NOTICES.md)
 
 ## License
 
-MIT © 2026 Eduardo Pacheco. Bundled World Bank data is CC BY 4.0; see
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+MIT © 2026 Eduardo Pacheco. Bundled World Bank data is CC BY 4.0; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Author
+
+Eduardo Pacheco · https://github.com/Eduardo12Pacheco
