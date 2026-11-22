@@ -140,7 +140,7 @@ licence checks and both Playwright projects. See [docs/TESTING.md](docs/TESTING.
 
 ## Documentation
 
-[Architecture](docs/ARCHITECTURE.md) · [Configuration](docs/ARCHITECTURE.md#configuration) · [Data](docs/DATA.md) ·
+[Architecture](docs/ARCHITECTURE.md) · [Configuration](docs/ARCHITECTURE.md#configuración) · [Data](docs/DATA.md) ·
 [Design](docs/DESIGN.md) · [Testing](docs/TESTING.md) · [Installation](docs/INSTALL.md) · [Releasing](docs/RELEASING.md) ·
 [Lakehouse](docs/LAKEHOUSE-MANIFEST.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Notices](THIRD_PARTY_NOTICES.md)
 
