@@ -342,10 +342,12 @@ jobs:
         run: cargo deny check
 
       - name: Sync Python environment
+        if: always()
         working-directory: pipeline
         run: uv sync --frozen
 
       - name: pip-audit
+        if: always()
         working-directory: pipeline
         run: uv run pip-audit
 
