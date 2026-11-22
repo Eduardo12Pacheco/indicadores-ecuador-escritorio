@@ -56,6 +56,12 @@ layers = [
 ]
 
 [[tool.importlinter.contracts]]
+name = "Adapters do not import the application layer"
+type = "forbidden"
+source_modules = ["ecuador_data.adapters"]
+forbidden_modules = ["ecuador_data.application"]
+
+[[tool.importlinter.contracts]]
 name = "Domain does not import infrastructure libraries"
 type = "forbidden"
 source_modules = ["ecuador_data.domain"]
