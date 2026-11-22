@@ -1,38 +1,37 @@
-# Testing guide
+# Guía de pruebas
 
-This guide describes the test layers, the exact commands and the determinism
-rules used by the repository. It is the human-readable companion to the CI
-workflow.
+Esta guía describe las capas de prueba, los comandos exactos y las reglas de determinismo
+que usa el repositorio. Es el complemento legible para personas del workflow de CI.
 
-## Pyramid
+## Pirámide de pruebas
 
-| Layer | Runner | Location | What it proves |
+| Capa | Runner | Ubicación | Qué demuestra |
 |---|---|---|---|
-| Pure TypeScript unit and property tests | Vitest 5 + fast-check | `src/core/**/*.test.ts` | transforms, statistics, CSV, search, view state, use cases |
-| Component and provider tests | Vitest + Testing Library | `src/ui/**/*.test.tsx` | keyboard behavior, validation, empty/error/loading states, axe (jsdom) |
-| Script tests | Vitest | `scripts/__tests__` | version sync, bundle budget, artifact collection |
-| Rust unit, integration and property tests | `cargo test` + proptest | `crates/indicators-core`, `src-tauri` | snapshot contracts, user store, update feed, IPC commands |
-| Python unit and integration tests | pytest + Hypothesis | `pipeline/tests` | catalog, World Bank adapter, snapshot build/verify, lakehouse import |
-| Browser end-to-end and accessibility | Playwright 1.65 (Chromium + WebKit) | `e2e/` | real routing, persistence, downloads, keyboard flows and axe WCAG scans |
-| Native end-to-end | WebdriverIO + tauri-driver | `e2e-native/` | the real desktop window on Linux |
-| Data reproducibility | `ecuador-data verify` | `data/` | raw checksums, schema counts and the logical hash |
+| Pruebas unitarias y de propiedades de TypeScript puro | Vitest 5 + fast-check | `src/core/**/*.test.ts` | transformaciones, estadísticas, CSV, búsqueda, estado de vista, casos de uso |
+| Pruebas de componentes y de proveedores | Vitest + Testing Library | `src/ui/**/*.test.tsx` | comportamiento con teclado, validación, estados vacío, error y carga, axe (jsdom) |
+| Pruebas de scripts | Vitest | `scripts/__tests__` | sincronización de versiones, presupuesto del bundle, recolección de artefactos |
+| Pruebas unitarias, de integración y de propiedades de Rust | `cargo test` + proptest | `crates/indicators-core`, `src-tauri` | contratos de la instantánea, tienda de usuario, feed de actualizaciones, comandos IPC |
+| Pruebas unitarias y de integración de Python | pytest + Hypothesis | `pipeline/tests` | catálogo, adaptador del Banco Mundial, build y verify de la instantánea, importación lakehouse |
+| End-to-end en navegador y accesibilidad | Playwright 1.65 (Chromium + WebKit) | `e2e/` | enrutamiento real, persistencia, descargas, flujos con teclado y escaneos WCAG de axe |
+| End-to-end nativo | WebdriverIO + tauri-driver | `e2e-native/` | la ventana de escritorio real en Linux |
+| Reproducibilidad de datos | `ecuador-data verify` | `data/` | checksums raw, conteos del esquema y el hash lógico |
 
-## Commands
+## Comandos
 
 ```bash
-# Fast TypeScript loop
+# Ciclo rápido de TypeScript
 npm run test
-npm run test:cov          # enforces the coverage thresholds
+npm run test:cov          # aplica los umbrales de cobertura
 npm run typecheck
 npm run lint
 
-# Everything the CI gate runs locally
+# Todo lo que ejecuta la puerta de CI en local
 npm run verify
 
-# Measured values used by the README Quality table
+# Valores medidos usados por la tabla de Calidad del README
 npm run metrics
 
-# Browser end-to-end (builds the e2e bundle and starts Vite preview)
+# End-to-end en navegador (construye el bundle e2e e inicia el preview de Vite)
 npx playwright install chromium webkit
 npm run test:e2e
 npx playwright test --project=chromium
@@ -52,123 +51,122 @@ uv run ruff check . && uv run ruff format --check .
 uv run mypy --strict src
 ```
 
-`npm run test:e2e` uses `playwright.config.ts`: it runs `npm run build:e2e`
-(mini JSON snapshot through the in-memory adapter) and then serves `dist/` on
-port 18173. `e2e/media/**` belongs to the capture project and is ignored by the
-default run.
+`npm run test:e2e` usa `playwright.config.ts`: ejecuta `npm run build:e2e` (la instantánea
+JSON mini a través del adaptador en memoria) y luego sirve `dist/` en el puerto 18173.
+`e2e/media/**` pertenece al proyecto de captura y se ignora en la ejecución por defecto.
 
-## What the E2E suite covers
+## Qué cubre la suite E2E
 
-- `explore.spec.ts`: default GDP, KPI cards, YoY transform and URL state,
-  peers, range presets and the data-table alternative.
-- `compare.spec.ts`: trajectory base year, the four-indicator cap, ranking
-  order, Ecuador highlight, missing geographies last and tab routing.
-- `palette.spec.ts`: `Mod+K`, Spanish diacritic-insensitive search, Enter,
-  Escape focus restoration, empty results and geography actions.
-- `views.spec.ts`: save through `Mod+S`, reload persistence, reopen restoring
-  the exact URL state, rename and delete confirmation.
-- `export.spec.ts`: exact CSV header, row count and values; PNG signature.
-- `settings.spec.ts`: immediate theme/language application and persistence,
-  update switch off by default, no update request on launch, dataset counts.
-- `states.spec.ts`: empty state, retry after an injected fault, and the
-  dataset-problem screen with recovery.
-- `keyboard.spec.ts`: skip link, palette, catalog arrows, chart scrubbing,
-  save dialog and shortcuts dialog without a mouse.
-- `offline.spec.ts`: Explore → Compare → Save → Export with a network guard
-  that aborts non-localhost requests and asserts zero attempts (S1).
-- `layout.spec.ts`: 960×640 minimum window, collapsed sidebar, no horizontal
-  scroll and no clipped primary actions.
-- `a11y.spec.ts`: axe with `wcag2a`, `wcag2aa`, `wcag21a` and `wcag21aa` over
-  every route × theme × language (28 scans) plus the palette, save, shortcuts
-  and delete dialogs (32 tests total).
+- `explore.spec.ts`: PIB por defecto, tarjetas de KPI, transformación interanual y estado de
+  la URL, pares, preajustes de rango y la alternativa de tabla de datos.
+- `compare.spec.ts`: año base de las trayectorias, el límite de cuatro indicadores, orden del
+  ranking, resaltado de Ecuador, geografías faltantes al final y enrutamiento de pestañas.
+- `palette.spec.ts`: `Mod+K`, búsqueda en español insensible a diacríticos, Enter, restauración
+  del foco con Escape, resultados vacíos y acciones de geografía.
+- `views.spec.ts`: guardar con `Mod+S`, persistencia tras recargar, reabrir restaurando el
+  estado exacto de la URL, renombrar y confirmación de eliminación.
+- `export.spec.ts`: encabezado CSV exacto, número de filas y valores; firma PNG.
+- `settings.spec.ts`: aplicación inmediata y persistencia de tema e idioma, comprobación de
+  actualizaciones desactivada por defecto, sin solicitud de actualización al iniciar, conteos
+  del conjunto de datos.
+- `states.spec.ts`: estado vacío, reintento tras una falla inyectada y la pantalla de problema
+  del conjunto de datos con recuperación.
+- `keyboard.spec.ts`: enlace de salto, paleta, flechas del catálogo, recorrido del gráfico,
+  diálogo de guardado y diálogo de atajos, sin ratón.
+- `offline.spec.ts`: Explorar → Comparar → Guardar → Exportar con un guardia de red que aborta
+  las solicitudes fuera de localhost y afirma cero intentos (S1).
+- `layout.spec.ts`: ventana mínima de 960×640, barra lateral contraída, sin desplazamiento
+  horizontal y sin acciones principales recortadas.
+- `a11y.spec.ts`: axe con `wcag2a`, `wcag2aa`, `wcag21a` y `wcag21aa` sobre cada ruta, tema e
+  idioma (28 escaneos), más los diálogos de paleta, guardado, atajos y eliminación (32 pruebas
+  en total).
 
-The suite never uses sleeps (`waitForTimeout` is forbidden); it relies on
-web-first assertions and user-visible state.
+La suite nunca usa esperas fijas (`waitForTimeout` está prohibido); se apoya en aserciones
+web-first y en el estado visible para la persona usuaria.
 
-## Determinism rules
+## Reglas de determinismo
 
-- No test performs a real network request. The World Bank adapter uses
-  `respx` fixtures; the GitHub release feed uses `httpmock` and a recorded
-  JSON fixture; browser tests use the bundled mini snapshot.
-- The in-memory adapter reads one JSON file per browser context. Tests seed
-  `localStorage` before the first paint and never share state between tests.
-- Property tests use fixed seeds: fast-check seed in `vitest.config.ts`,
-  Hypothesis `derandomize` in CI and `PROPTEST_RNG_SEED` for Rust.
-- Rust, Python and the user store integration tests use real SQLite files in
-  temporary directories.
-- Screenshots and traces are only written on failure (`test-results/`), and the
-  capture project in `e2e/media/` is documentation, not assertions.
+- Ninguna prueba realiza una solicitud de red real. El adaptador del Banco Mundial usa
+  fixtures de `respx`; el feed de releases de GitHub usa `httpmock` y un fixture JSON grabado;
+  las pruebas de navegador usan la instantánea mini incluida.
+- El adaptador en memoria lee un archivo JSON por contexto de navegador. Las pruebas siembran
+  `localStorage` antes del primer render y nunca comparten estado entre pruebas.
+- Las pruebas de propiedades usan semillas fijas: la semilla de fast-check está en
+  `vitest.config.ts`, `derandomize` de Hypothesis en CI y `PROPTEST_RNG_SEED` para Rust.
+- Las pruebas de integración de Rust, de Python y de la tienda de usuario usan archivos SQLite
+  reales en directorios temporales.
+- Las capturas y las trazas solo se escriben ante fallos (`test-results/`), y el proyecto de
+  captura en `e2e/media/` es documentación, no aserciones.
 
-## Local environment notes
+## Notas del entorno local
 
-Playwright's WebKit download needs the Ubuntu packages `libicu74` and
-`libxml2`; CI installs them with `npx playwright install --with-deps`. On a
-workstation without sudo, extract those two runtime packages into the
-Playwright browser cache and run with
-`PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1`; this is a local-only workaround,
-not a repository requirement. Native E2E is Linux-only by design (ADR 0007).
+La descarga de WebKit de Playwright necesita los paquetes de Ubuntu `libicu74` y `libxml2`;
+CI los instala con `npx playwright install --with-deps`. En una estación de trabajo sin sudo,
+extrae esos dos paquetes de runtime en el caché del navegador de Playwright y ejecuta con
+`PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1`; esto es una solución solo local, no un requisito
+del repositorio. El E2E nativo solo se ejecuta en Linux por diseño (ADR 0007).
 
-## Coverage and gates
+## Cobertura y puertas
 
-| Gate | Threshold | Where |
+| Puerta | Umbral | Dónde |
 |---|---|---|
-| Vitest lines/statements/functions | 85 % | `vitest.config.ts`, `npm run test:cov` |
-| Vitest branches | 80 % | `vitest.config.ts` |
-| `src/core/**` | 95 % lines/statements/functions, 90 % branches | `vitest.config.ts` |
-| Rust `indicators-core` lines | 85 % | CI via `cargo llvm-cov` |
-| Python `pipeline/src` | 85 % | pytest addopts |
+| Vitest líneas / sentencias / funciones | 85 % | `vitest.config.ts`, `npm run test:cov` |
+| Vitest ramas | 80 % | `vitest.config.ts` |
+| `src/core/**` | 95 % en líneas / sentencias / funciones, 90 % en ramas | `vitest.config.ts` |
+| Líneas de Rust en `indicators-core` | 85 % | CI mediante `cargo llvm-cov` |
+| `pipeline/src` en Python | 85 % | addopts de pytest |
 
-Numbers measured on v0.1.0 (2026-11-20):
+Números medidos en v0.1.0 (2026-11-20):
 
-| Artifact | Value | Produced by |
+| Artefacto | Valor | Producido por |
 |---|---|---|
-| TypeScript lines / branches / statements / functions | 91.7% / 83.87% / 91.67% / 91.56% | `npm run test:cov` → `coverage/coverage-summary.json` |
-| Python pipeline coverage | 96.1% | `uv run pytest` → `pipeline/coverage.json` |
-| Browser E2E scenarios | 68 per browser project; 68 passed on Chromium locally, the WebKit project runs in CI | `npm run test:e2e` → `.generated/playwright.json` (`npm run metrics` → `playwright.scenarios`) |
-| Rust `indicators-core` lines | 88.9% measured in CI run 44749667530 (gate 85%) | `cargo llvm-cov -p indicators-core --fail-under-lines 85` |
-| JavaScript gzip total | 392,397 B (budget 716,800 B) | `npm run build` + `node scripts/check-bundle-size.mjs` |
-| Snapshot | 38 indicators, 8 topics, 7 geographies, 11,780 observations | `data/MANIFEST.json` |
+| TypeScript líneas / ramas / sentencias / funciones | 91.7% / 83.87% / 91.67% / 91.56% | `npm run test:cov` → `coverage/coverage-summary.json` |
+| Cobertura del pipeline de Python | 96.1% | `uv run pytest` → `pipeline/coverage.json` |
+| Escenarios E2E de navegador | 68 por proyecto de navegador; 68 aprobaron en Chromium en local, el proyecto WebKit corre en CI | `npm run test:e2e` → `.generated/playwright.json` (`npm run metrics` → `playwright.scenarios`) |
+| Líneas de Rust en `indicators-core` | 88.9% medido en la ejecución de CI 44749667530 (puerta 85%) | `cargo llvm-cov -p indicators-core --fail-under-lines 85` |
+| Total gzip de JavaScript | 392,397 B (presupuesto 716,800 B) | `npm run build` + `node scripts/check-bundle-size.mjs` |
+| Instantánea | 38 indicadores, 8 temas, 7 geografías, 11,780 observaciones | `data/MANIFEST.json` |
 
-`npm run metrics` prints the same values as JSON, except the Rust number. That
-number is not measured locally: the `rust-coverage` CI job runs `cargo llvm-cov`,
-enforces the 85% gate, and prints the lines percentage (88.91% in run
-44749667530, the value shown above).
+`npm run metrics` imprime los mismos valores en JSON, salvo el número de Rust. Ese número no
+se mide en local: el job `rust-coverage` de CI ejecuta `cargo llvm-cov`, aplica la puerta del
+85 % e imprime el porcentaje de líneas (88.91% en la ejecución 44749667530, el valor mostrado
+arriba).
 
-## CI job map
+## Mapa de jobs de CI
 
-| CI job | Local equivalent |
+| Job de CI | Equivalente local |
 |---|---|
 | `lint` | `npm run lint`, `npm run typecheck`, `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `uv run ruff check`, `uv run ruff format --check`, `uv run mypy --strict src`, `uv run lint-imports`, `uv lock --check` |
-| `ts` (3 OS) | `npm run test:cov` |
-| `rust` (3 OS) | `cargo test --workspace` |
-| `rust-coverage` | `cargo llvm-cov -p indicators-core --fail-under-lines 85` (CI only) |
-| `pipeline` (3 OS) | `cd pipeline && uv run pytest` |
-| `data` | `uv run ecuador-data verify` plus deterministic rebuild and fixture comparisons |
+| `ts` (3 SO) | `npm run test:cov` |
+| `rust` (3 SO) | `cargo test --workspace` |
+| `rust-coverage` | `cargo llvm-cov -p indicators-core --fail-under-lines 85` (solo en CI) |
+| `pipeline` (3 SO) | `cd pipeline && uv run pytest` |
+| `data` | `uv run ecuador-data verify` más las comparaciones de reconstrucción determinista y de fixtures |
 | `bindings` | `npm run check:bindings` |
 | `e2e-web` | `npx playwright install --with-deps chromium webkit && npm run test:e2e` |
-| `e2e-native` | `xvfb-run -a npm --prefix e2e-native test` after `npx tauri build --no-bundle` |
+| `e2e-native` | `xvfb-run -a npm --prefix e2e-native test` después de `npx tauri build --no-bundle` |
 | `audit`, `secrets`, `licenses` | `npm audit --omit=dev --audit-level=high`, `cargo audit`, `cargo deny check`, `uv run pip-audit`, `gitleaks git`, `npm run check:licenses` |
 | `build-smoke`, `version` | `npm run build`, `npx tauri build --no-bundle`, `--self-check`, `npm run check:version` |
 
-## Native E2E
+## E2E nativo
 
-The WebdriverIO suite in `e2e-native/` drives the real window through
-`tauri-driver` + WebKitWebDriver on Linux. It needs `tauri-driver`,
-`WebKitWebDriver` and a display: `node scripts/native-e2e-prereqs.mjs` reports
-every missing item and exits 3. CI installs the packages and runs the suite
-under `xvfb-run`; the same command is `npm run e2e:native`. macOS is excluded
-because `tauri-driver` has no WKWebView driver (ADR 0007).
+La suite de WebdriverIO en `e2e-native/` controla la ventana real a través de `tauri-driver` +
+WebKitWebDriver en Linux. Necesita `tauri-driver`, `WebKitWebDriver` y una pantalla:
+`node scripts/native-e2e-prereqs.mjs` informa cada elemento faltante y termina con código 3.
+CI instala los paquetes y ejecuta la suite bajo `xvfb-run`; el mismo comando es
+`npm run e2e:native`. macOS queda excluido porque `tauri-driver` no tiene driver para WKWebView
+(ADR 0007).
 
-## Known gaps
+## Limitaciones conocidas
 
-- Rust line coverage, `cargo deny`/`cargo audit` on runners, the 3-OS matrices
-  and native E2E execute only in GitHub Actions; the local host cannot run them
-  (no rustup/llvm-tools, no WebKitWebDriver) and reports the reason instead of
-  inventing a result.
-- Playwright WebKit on a workstation without `libicu74`/`libxml2` needs
-  `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1` after extracting those packages
-  into the browser cache. CI installs them with `--with-deps`.
-- Installer sizes are reported only from real release artifacts; no release has
-  been published at v0.1.0.
-- Visual regression is intentionally out of scope; screenshots are documentation
-  generated by `npm run capture:media`, not assertions.
+- La cobertura de líneas de Rust, `cargo deny` y `cargo audit` en los runners, las matrices de
+  tres sistemas operativos y el E2E nativo solo se ejecutan en GitHub Actions; el host local no
+  puede ejecutarlos (no tiene rustup, llvm-tools ni WebKitWebDriver) y en su lugar informa el
+  motivo, sin inventar un resultado.
+- WebKit de Playwright en una estación de trabajo sin `libicu74` ni `libxml2` necesita
+  `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1` después de extraer esos paquetes en el caché
+  del navegador. CI los instala con `--with-deps`.
+- Los tamaños de los instaladores solo se informan a partir de artefactos de release reales; no
+  se ha publicado ninguna release en v0.1.0.
+- La regresión visual queda fuera de alcance de forma intencional; las capturas son
+  documentación generada por `npm run capture:media`, no aserciones.
