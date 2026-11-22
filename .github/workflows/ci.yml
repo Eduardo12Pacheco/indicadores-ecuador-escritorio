@@ -111,7 +111,7 @@ jobs:
 
       - uses: ./.github/actions/setup-toolchain
         with:
-          linux-deps: "false"
+          linux-deps: "true"
 
       - name: Cargo test
         run: cargo test --workspace
