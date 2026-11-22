@@ -10,6 +10,8 @@ interface ViolationSummary {
   readonly impact: string | null | undefined;
   readonly help: string;
   readonly nodes: string[];
+  /** axe's per-node reasons, such as the measured foreground and background colors. */
+  readonly reasons: string[];
 }
 
 /**
@@ -26,6 +28,9 @@ export async function expectNoA11yViolations(page: Page): Promise<void> {
     impact: violation.impact,
     help: violation.help,
     nodes: violation.nodes.map((node) => node.target.join(" ")),
+    reasons: violation.nodes.flatMap((node) =>
+      [...node.any, ...node.all, ...node.none].map((check) => check.message),
+    ),
   }));
   expect(
     summary,
