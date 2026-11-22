@@ -1,6 +1,11 @@
 import { waitForApp } from "./support";
 
 describe("native language switch", () => {
+  // One run shares a single app home, so the language would leak into the specs that follow.
+  after(async () => {
+    await $('[data-testid="language-switch"]').selectByAttribute("value", "en");
+  });
+
   it("switches the navigation to Spanish", async () => {
     await waitForApp();
 
