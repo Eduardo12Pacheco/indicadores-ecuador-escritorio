@@ -153,8 +153,11 @@ jobs:
           set -euo pipefail
           chmod +x release-assets/*.AppImage
           cd "$RUNNER_TEMP"
-          xvfb-run -a "$GITHUB_WORKSPACE"/release-assets/*.AppImage --appimage-extract-and-run --self-check --out sc-appimage.json
-          node "$GITHUB_WORKSPACE/scripts/assert-self-check.mjs" sc-appimage.json
+          # The AppImage launcher changes into its AppDir before starting the app, so a
+          # relative --out would be written there instead of here. Use an absolute path.
+          report="$RUNNER_TEMP/sc-appimage.json"
+          xvfb-run -a "$GITHUB_WORKSPACE"/release-assets/*.AppImage --appimage-extract-and-run --self-check --out "$report"
+          node "$GITHUB_WORKSPACE/scripts/assert-self-check.mjs" "$report"
 
   smoke-windows:
     name: Smoke test Windows installers
